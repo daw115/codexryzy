@@ -1,0 +1,13 @@
+project_id = "rrvsejxfuzzzgxsjabmq"
+
+[functions.chat]
+verify_jwt = false
+
+[functions.transcribe-audio]
+verify_jwt = false
+
+[functions.build-knowledge]
+verify_jwt = false
+
+[functions.transcribe-slides]
+verify_jwt = false
