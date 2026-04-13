@@ -12,8 +12,8 @@ import urllib.request
 import urllib.error
 
 # ── CONFIG — paste your values here ───────────────────────────────────────────
-N8N_URL   = "https://YOUR_N8N_URL"          # e.g. https://n8n-production-xxxx.up.railway.app
-JWT_TOKEN = "YOUR_JWT_TOKEN"                # from n8n UI: Settings → API → API Key
+N8N_URL   = "https://n8n-production-f1967.up.railway.app"
+JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NDU1NzRkZi05ZjViLTQ3NTgtYmI5Ny01NTJmOTQ2ZDlmMWIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiMTg0OWRhOWUtMzI1ZS00MmZlLWFiODQtYTFkMGYxODk2NjFiIiwiaWF0IjoxNzc2MDQ3NjgxLCJleHAiOjE3Nzg1NTg0MDB9.bRK8m7YkoxVGd7uyICpp-9I_8KCgeCuu4g6nNBA0ht0"
 API_KEY   = "qua-3fe84831eb5df3856a4790c2461ae1bf"
 MODEL     = "claude-sonnet-4-6-20250929"
 API_CHAT  = "https://api.quatarly.cloud/v1/chat/completions"
