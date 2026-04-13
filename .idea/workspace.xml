@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="865a1fab-c6f8-4436-ad9a-5934186c68e1" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/ojeai.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/document-ingest.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/historical-mail-backfill.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/railway-bootstrap.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/web-enrichment-worker.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/work-assistant-architecture.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/backfill_mail_knowledge_base.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/document_extractors.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/ingest_documents_to_work_assistant.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/mail_ingest_common.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/refresh_mail_metadata_from_drive.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/requirements-backfill.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/requirements-ingest.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/requirements-worker.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/run_historical_backfill_batches.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/upgrade_live_email_ingest_workflow.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/web_enrichment_worker.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/.env.example" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/.env.railway.example" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/Dockerfile" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/clients/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/clients/embeddings.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/clients/vikunja.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/database.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/routers/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/routers/assistant.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/routers/enrichment.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/routers/health.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/routers/search.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/routers/tasks.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/routers/usage.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/security.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/services/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/services/dashboard.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/services/enrichment.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/services/ingest.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/services/search.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/services/tasks.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/app/services/usage.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/migrate.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/pyproject.toml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/sql/001_init.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-api/sql/002_enrichment.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-worker/.env.railway.example" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-worker/Dockerfile" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-worker/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-worker/requirements-worker.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-worker/web_enrichment_worker.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/work-assistant-worker/work_assistant_pipeline.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/librechat.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/librechat.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/backfill_mail_to_work_assistant.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/backfill_mail_to_work_assistant.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/work_assistant_pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/work_assistant_pipeline.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/work-assistant-api/app/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/work-assistant-api/app/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/work-assistant-api/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/work-assistant-api/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/work-assistant-api/app/routers/dashboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/work-assistant-api/app/routers/dashboard.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/work-assistant-api/app/routers/documents.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/work-assistant-api/app/routers/documents.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/work-assistant-api/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/work-assistant-api/app/schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/work-assistant-api/app/services/assistant.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/work-assistant-api/app/services/assistant.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/work-assistant-api/app/services/coverage.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/work-assistant-api/app/services/coverage.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup_email_ingest.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup_email_ingest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/workflows/1-email-assistant.json" beforeDir="false" afterPath="$PROJECT_DIR$/workflows/1-email-assistant.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/workflows/2-document-analyzer.json" beforeDir="false" afterPath="$PROJECT_DIR$/workflows/2-document-analyzer.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/workflows/3-daily-briefing.json" beforeDir="false" afterPath="$PROJECT_DIR$/workflows/3-daily-briefing.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/workflows/4-librechat-bridge.json" beforeDir="false" afterPath="$PROJECT_DIR$/workflows/4-librechat-bridge.json" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="3CI0NzGiyvlyMNK9KrkMcvsTtda" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="865a1fab-c6f8-4436-ad9a-5934186c68e1" name="Changes" comment="" />
+      <created>1776057743399</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1776057743399</updated>
+    </task>
+    <servers />
+  </component>
+</project>

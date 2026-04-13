@@ -3,9 +3,10 @@
 Setup: 5 - Email Ingest workflow in n8n.
 
 What this does:
-  1. Creates a Google Drive OAuth2 credential in n8n
-  2. Logs into Vikunja to get an API token
-  3. Creates the Email Ingest workflow (6 nodes)
+  1. Reuses or creates a Google Drive OAuth2 credential in n8n
+  2. Reuses the existing Quatarly n8n credential
+  3. Uses a Vikunja API token or logs in to obtain one
+  4. Creates the Email Ingest workflow (6 nodes)
 
 After running:
   → Go to n8n → Credentials → "Google Drive OAuth2" → click Connect
@@ -16,30 +17,39 @@ How to get DRIVE_FOLDER_ID:
   Copy that last part.
 
 Usage:
+  export N8N_API_KEY=...
+  export GOOGLE_CLIENT_ID=...
+  export GOOGLE_CLIENT_SECRET=...
+  export DRIVE_FOLDER_ID=...
+  export VIKUNJA_API_TOKEN=...   # or VIKUNJA_PASS=...
   python3 setup_email_ingest.py
 """
 
 import json
+import os
 import urllib.request
 import urllib.error
 import sys
 
-# ── CONFIG — fill in VIKUNJA_PASS and DRIVE_FOLDER_ID ─────────────────────────
-N8N_URL       = "https://n8n-production-f1967.up.railway.app"
-N8N_API_KEY   = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NDU1NzRkZi05ZjViLTQ3NTgtYmI5Ny01NTJmOTQ2ZDlmMWIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiMDUyMjhhNWEtZTU5Ny00MjdhLWE1MTItYWRjOTBlNjI3ODI3IiwiaWF0IjoxNzc2MDQ0MzU5LCJleHAiOjE3Nzg1NTg0MDB9.hvvJEWeg4pbr_RyU2b-aiNRpvvVxCIVEelIVazves6s"
+# ── CONFIG — set via environment variables ────────────────────────────────────
+N8N_URL       = os.environ.get("N8N_URL", "https://n8n-production-f1967.up.railway.app").rstrip("/")
+N8N_API_KEY   = os.environ.get("N8N_API_KEY", "")
 
-VIKUNJA_URL   = "https://vikunja-production-b34c.up.railway.app"
-VIKUNJA_USER  = "admin"
-VIKUNJA_PASS  = "FILL_ME_IN"   # ← paste your Vikunja password here
-PROJECT_ID    = 1              # Inbox project
+VIKUNJA_URL        = os.environ.get("VIKUNJA_URL", "https://vikunja-production-b34c.up.railway.app").rstrip("/")
+VIKUNJA_USER       = os.environ.get("VIKUNJA_USER", "admin")
+VIKUNJA_PASS       = os.environ.get("VIKUNJA_PASS", "")
+VIKUNJA_API_TOKEN  = os.environ.get("VIKUNJA_API_TOKEN", "")
+PROJECT_ID         = int(os.environ.get("VIKUNJA_PROJECT_ID", "1"))
 
-GOOGLE_CLIENT_ID     = "FILL_ME_IN"   # ← paste your Google OAuth2 Client ID
-GOOGLE_CLIENT_SECRET = "FILL_ME_IN"   # ← paste your Google OAuth2 Client Secret
-DRIVE_FOLDER_ID      = "FILL_ME_IN"  # ← Google Drive folder ID containing .eml files
+GOOGLE_CLIENT_ID      = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET  = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+GOOGLE_DRIVE_CRED_NAME = os.environ.get("N8N_GOOGLE_DRIVE_CREDENTIAL_NAME", "Google Drive OAuth2")
+DRIVE_FOLDER_ID       = os.environ.get("DRIVE_FOLDER_ID", "")
 
-API_KEY  = "qua-3fe84831eb5df3856a4790c2461ae1bf"
-MODEL    = "claude-sonnet-4-6-20250929"
-API_CHAT = "https://api.quatarly.cloud/v1/chat/completions"
+QUATARLY_CRED_NAME = os.environ.get("N8N_QUATARLY_CREDENTIAL_NAME", "Quatarly API Key")
+MODEL              = os.environ.get("QUATARLY_MODEL", "claude-sonnet-4-6-20250929")
+API_CHAT           = os.environ.get("QUATARLY_API_CHAT", "https://api.quatarly.cloud/v0/chat/completions")
+WORKFLOW_NAME      = os.environ.get("N8N_EMAIL_INGEST_WORKFLOW_NAME", "5 - Email Ingest")
 # ──────────────────────────────────────────────────────────────────────────────
 
 N8N_HEADERS = {
@@ -50,7 +60,7 @@ N8N_HEADERS = {
 
 def n8n(method, path, body=None):
     url = f"{N8N_URL}/api/v1{path}"
-    data = json.dumps(body).encode() if body else None
+    data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(url, data=data, headers=N8N_HEADERS, method=method)
     try:
         with urllib.request.urlopen(req) as r:
@@ -74,6 +84,25 @@ def vikunja_login(username, password):
     except urllib.error.HTTPError as e:
         print(f"  Vikunja login failed HTTP {e.code}: {e.read().decode()}")
         raise
+
+
+def find_n8n_credential(name, cred_type=None):
+    result = n8n("GET", "/credentials")
+    for cred in result.get("data", []):
+        if cred["name"] != name:
+            continue
+        if cred_type and cred["type"] != cred_type:
+            continue
+        return cred
+    return None
+
+
+def find_n8n_workflow(name):
+    result = n8n("GET", "/workflows")
+    for workflow in result.get("data", []):
+        if workflow["name"] == name:
+            return workflow
+    return None
 
 
 # ── Code node scripts ──────────────────────────────────────────────────────────
@@ -180,7 +209,7 @@ return [{
 """
 
 
-def build_workflow(cred_id, vikunja_token):
+def build_workflow(google_drive_cred, quatarly_cred, vikunja_token):
     """Build the full Email Ingest workflow JSON."""
 
     claude_body = (
@@ -215,7 +244,7 @@ def build_workflow(cred_id, vikunja_token):
     )
 
     return {
-        "name": "5 - Email Ingest",
+        "name": WORKFLOW_NAME,
         "nodes": [
             # Node 1: Google Drive Trigger
             {
@@ -235,8 +264,8 @@ def build_workflow(cred_id, vikunja_token):
                 "position": [240, 300],
                 "credentials": {
                     "googleDriveOAuth2Api": {
-                        "id": cred_id,
-                        "name": "Google Drive OAuth2",
+                        "id": google_drive_cred["id"],
+                        "name": google_drive_cred["name"],
                     }
                 },
             },
@@ -258,8 +287,8 @@ def build_workflow(cred_id, vikunja_token):
                 "position": [520, 300],
                 "credentials": {
                     "googleDriveOAuth2Api": {
-                        "id": cred_id,
-                        "name": "Google Drive OAuth2",
+                        "id": google_drive_cred["id"],
+                        "name": google_drive_cred["name"],
                     }
                 },
             },
@@ -279,10 +308,11 @@ def build_workflow(cred_id, vikunja_token):
                 "parameters": {
                     "method": "POST",
                     "url": API_CHAT,
+                    "authentication": "genericCredentialType",
+                    "genericAuthType": "httpHeaderAuth",
                     "sendHeaders": True,
                     "headerParameters": {
                         "parameters": [
-                            {"name": "Authorization", "value": f"Bearer {API_KEY}"},
                             {"name": "Content-Type",  "value": "application/json"},
                         ]
                     },
@@ -296,6 +326,12 @@ def build_workflow(cred_id, vikunja_token):
                 "type": "n8n-nodes-base.httpRequest",
                 "typeVersion": 4,
                 "position": [1080, 300],
+                "credentials": {
+                    "httpHeaderAuth": {
+                        "id": quatarly_cred["id"],
+                        "name": quatarly_cred["name"],
+                    }
+                },
             },
             # Node 5: Code - Extract Task
             {
@@ -350,42 +386,68 @@ def build_workflow(cred_id, vikunja_token):
             },
         },
         "settings": {"executionOrder": "v1"},
-        "active": False,
     }
 
 
 def main():
-    # Check placeholders
-    if VIKUNJA_PASS == "FILL_ME_IN":
-        print("ERROR: Set VIKUNJA_PASS in the CONFIG section of this script.")
+    if not N8N_API_KEY:
+        print("ERROR: Set N8N_API_KEY in the environment.")
         sys.exit(1)
-    if DRIVE_FOLDER_ID == "FILL_ME_IN":
-        print("ERROR: Set DRIVE_FOLDER_ID in the CONFIG section of this script.")
+    if not DRIVE_FOLDER_ID:
+        print("ERROR: Set DRIVE_FOLDER_ID in the environment.")
         print("  Open your Google Drive folder → copy ID from URL: /folders/XXXXXXXXXX")
         sys.exit(1)
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        print("ERROR: Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in the environment.")
+        sys.exit(1)
+    if not VIKUNJA_API_TOKEN and not VIKUNJA_PASS:
+        print("ERROR: Set VIKUNJA_API_TOKEN or VIKUNJA_PASS in the environment.")
+        sys.exit(1)
 
-    # ── Step 1: Create Google Drive OAuth2 credential ─────────────────────────
-    print("Step 1: Creating Google Drive OAuth2 credential in n8n...")
-    cred_body = {
-        "name": "Google Drive OAuth2",
-        "type": "googleDriveOAuth2Api",
-        "data": {
-            "clientId":     GOOGLE_CLIENT_ID,
-            "clientSecret": GOOGLE_CLIENT_SECRET,
-        },
-    }
-    cred = n8n("POST", "/credentials", cred_body)
-    cred_id = cred["id"]
-    print(f"  Created credential ID: {cred_id}")
+    quatarly_cred = find_n8n_credential(QUATARLY_CRED_NAME, "httpHeaderAuth")
+    if not quatarly_cred:
+        print(f"ERROR: Missing n8n credential '{QUATARLY_CRED_NAME}'.")
+        print("  Create an HTTP Header Auth credential in n8n with the Quatarly bearer token first.")
+        sys.exit(1)
+
+    existing_google_drive_cred = find_n8n_credential(GOOGLE_DRIVE_CRED_NAME, "googleDriveOAuth2Api")
+    if existing_google_drive_cred:
+        google_drive_cred = existing_google_drive_cred
+        print(f"Step 1: Reusing Google Drive credential '{google_drive_cred['name']}' ({google_drive_cred['id']})...")
+    else:
+        print("Step 1: Creating Google Drive OAuth2 credential in n8n...")
+        cred_body = {
+            "name": GOOGLE_DRIVE_CRED_NAME,
+            "type": "googleDriveOAuth2Api",
+            "data": {
+                "serverUrl": "https://accounts.google.com",
+                "clientId":     GOOGLE_CLIENT_ID,
+                "clientSecret": GOOGLE_CLIENT_SECRET,
+                "sendAdditionalBodyProperties": False,
+                "additionalBodyProperties": {},
+            },
+        }
+        google_drive_cred = n8n("POST", "/credentials", cred_body)
+        print(f"  Created credential ID: {google_drive_cred['id']}")
 
     # ── Step 2: Get Vikunja token ──────────────────────────────────────────────
-    print("Step 2: Logging into Vikunja...")
-    vikunja_token = vikunja_login(VIKUNJA_USER, VIKUNJA_PASS)
-    print(f"  Got Vikunja token: {vikunja_token[:20]}...")
+    print("Step 2: Resolving Vikunja auth...")
+    if VIKUNJA_API_TOKEN:
+        vikunja_token = VIKUNJA_API_TOKEN
+        print("  Using VIKUNJA_API_TOKEN from the environment.")
+    else:
+        vikunja_token = vikunja_login(VIKUNJA_USER, VIKUNJA_PASS)
+        print(f"  Logged in as {VIKUNJA_USER}.")
 
     # ── Step 3: Create workflow ────────────────────────────────────────────────
-    print("Step 3: Creating workflow '5 - Email Ingest'...")
-    wf = build_workflow(cred_id, vikunja_token)
+    existing_workflow = find_n8n_workflow(WORKFLOW_NAME)
+    if existing_workflow:
+        print(f"ERROR: Workflow '{WORKFLOW_NAME}' already exists with ID {existing_workflow['id']}.")
+        print("  Delete or rename it before running this script again.")
+        sys.exit(1)
+
+    print(f"Step 3: Creating workflow '{WORKFLOW_NAME}'...")
+    wf = build_workflow(google_drive_cred, quatarly_cred, vikunja_token)
     result = n8n("POST", "/workflows", wf)
     wf_id = result["id"]
     print(f"  Created workflow ID: {wf_id}")

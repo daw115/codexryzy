@@ -17,7 +17,7 @@ def env(name: str, default: str) -> str:
 WORK_ASSISTANT_API_URL = env("WORK_ASSISTANT_API_URL", "http://localhost:8080").rstrip("/")
 WORK_ASSISTANT_API_KEY = os.environ.get("WORK_ASSISTANT_API_KEY", "").strip()
 
-LLM_API_URL = env("LLM_API_URL", "https://api.quatarly.cloud/v1/chat/completions")
+LLM_API_URL = env("LLM_API_URL", "https://api.quatarly.cloud/v0/chat/completions")
 LLM_API_KEY = os.environ.get("LLM_API_KEY", "").strip()
 LLM_MODEL = env("LLM_MODEL", "claude-sonnet-4-6-20250929")
 
@@ -36,7 +36,7 @@ ENRICH_MAX_RESULTS = int(env("ENRICH_MAX_RESULTS", "10"))
 ENRICH_MAX_TOPICS = int(env("ENRICH_MAX_TOPICS", "3"))
 
 
-def http_json(method: str, url: str, body: dict | None = None, headers: dict | None = None) -> dict:
+def http_json(method: str, url: str, body: dict | None = None, headers: dict | None = None, timeout: int = 90) -> dict:
     request_headers = {"Content-Type": "application/json"}
     if headers:
         request_headers.update(headers)
@@ -44,11 +44,38 @@ def http_json(method: str, url: str, body: dict | None = None, headers: dict | N
     data = json.dumps(body).encode("utf-8") if body is not None else None
     request = urllib.request.Request(url, data=data, headers=request_headers, method=method)
     try:
-        with urllib.request.urlopen(request, timeout=120) as response:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            # read with a hard deadline — urllib timeout covers connect+first-byte only
+            import socket
+            response.fp.raw._sock.settimeout(timeout)  # type: ignore[attr-defined]
             return json.loads(response.read())
     except urllib.error.HTTPError as error:
         payload = error.read().decode("utf-8", errors="ignore")
         raise RuntimeError(f"{method} {url} failed with HTTP {error.code}: {payload}") from error
+    except (TimeoutError, OSError, socket.timeout) as error:
+        raise RuntimeError(f"{method} {url} timed out after {timeout}s: {error}") from error
+
+
+def log_llm_usage(*, model: str, endpoint: str, prompt_tokens: int, completion_tokens: int, total_tokens: int) -> None:
+    if not (WORK_ASSISTANT_API_URL and WORK_ASSISTANT_API_KEY):
+        return
+
+    try:
+        http_json(
+            "POST",
+            f"{WORK_ASSISTANT_API_URL}/v1/usage/llm",
+            body={
+                "model": model,
+                "endpoint": endpoint,
+                "prompt_tokens": max(0, int(prompt_tokens)),
+                "completion_tokens": max(0, int(completion_tokens)),
+                "total_tokens": max(0, int(total_tokens)),
+            },
+            headers={"X-API-Key": WORK_ASSISTANT_API_KEY},
+            timeout=30,
+        )
+    except Exception:
+        return
 
 
 def parse_json_object(value: str) -> dict:
@@ -170,6 +197,14 @@ def analyze_artifact(
             "stream": False,
         },
         headers={"Authorization": f"Bearer {LLM_API_KEY}"},
+    )
+    usage = response.get("usage") or {}
+    log_llm_usage(
+        model=str(response.get("model") or LLM_MODEL),
+        endpoint=f"pipeline_{artifact_type}_analysis",
+        prompt_tokens=int(usage.get("prompt_tokens") or 0),
+        completion_tokens=int(usage.get("completion_tokens") or 0),
+        total_tokens=int(usage.get("total_tokens") or 0),
     )
 
     content = response["choices"][0]["message"]["content"]

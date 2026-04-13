@@ -13,8 +13,12 @@ from app.routers.dashboard import router as dashboard_router
 from app.routers.documents import router as documents_router
 from app.routers.enrichment import router as enrichment_router
 from app.routers.health import router as health_router
+from app.routers.meetings import router as meetings_router
 from app.routers.search import router as search_router
+from app.routers.briefing import router as briefing_router
+from app.routers.credits import router as credits_router
 from app.routers.tasks import router as tasks_router
+from app.routers.usage import router as usage_router
 
 
 @asynccontextmanager
@@ -61,4 +65,8 @@ app.include_router(enrichment_router)
 app.include_router(search_router)
 app.include_router(assistant_router)
 app.include_router(tasks_router)
+app.include_router(meetings_router)
 app.include_router(coverage_router)
+app.include_router(usage_router)
+app.include_router(credits_router)
+app.include_router(briefing_router)

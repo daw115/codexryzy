@@ -5,7 +5,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "email-assistant",
-        "responseMode": "lastNode",
+        "responseMode": "responseNode",
         "options": {}
       },
       "id": "a1b2c3d4-0001-0001-0001-000000000001",
@@ -18,7 +18,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.quatarly.cloud/v1/chat/completions",
+        "url": "https://api.quatarly.cloud/v0/chat/completions",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -31,21 +31,8 @@
           ]
         },
         "sendBody": true,
-        "contentType": "json",
-        "body": {
-          "model": "claude-sonnet-4-6",
-          "max_tokens": 1024,
-          "messages": [
-            {
-              "role": "system",
-              "content": "You are an email assistant. Summarize emails clearly and concisely. Extract: sender, subject, key points, required actions."
-            },
-            {
-              "role": "user",
-              "content": "={{ $json.body.emailContent || $json.body.message || 'No content provided' }}"
-            }
-          ]
-        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({model:'claude-sonnet-4-6-20250929',max_tokens:1024,messages:[{role:'system',content:'You are an email assistant. Summarize emails clearly and concisely. Extract: sender, subject, key points, required actions.'},{role:'user',content:$json.body.emailContent||$json.body.message||'No content provided'}],stream:false}) }}",
         "options": {}
       },
       "id": "a1b2c3d4-0001-0001-0001-000000000002",
@@ -97,7 +84,7 @@
       ]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
     "executionOrder": "v1"
   },

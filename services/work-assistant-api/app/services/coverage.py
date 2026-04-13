@@ -65,6 +65,7 @@ async def get_mail_coverage(
                     d.id::text AS document_id,
                     d.title,
                     d.created_at AS ingested_at,
+                    s.metadata->>'modified_label' AS source_modified_label,
                     COALESCE(
                         d.metadata->>'message_date_day',
                         r.metadata->>'message_date_day'
@@ -92,6 +93,7 @@ async def get_mail_coverage(
 
     day_counts: dict[str, int] = {}
     recent_documents: list[MailCoverageDocument] = []
+    undated_email_documents = 0
 
     for row in rows:
         normalized_day = row["message_date_day"] or _normalize_message_day(
@@ -100,6 +102,8 @@ async def get_mail_coverage(
         )
         if normalized_day:
             day_counts[normalized_day] = day_counts.get(normalized_day, 0) + 1
+        else:
+            undated_email_documents += 1
 
         if len(recent_documents) < document_limit:
             recent_documents.append(
@@ -108,6 +112,7 @@ async def get_mail_coverage(
                     title=row["title"],
                     message_day=normalized_day,
                     message_date_raw=row["message_date_raw"],
+                    source_modified_label=row["source_modified_label"],
                     ingested_at=row["ingested_at"],
                 )
             )
@@ -116,6 +121,7 @@ async def get_mail_coverage(
     return MailCoverageResponse(
         total_email_documents=len(rows),
         covered_days_count=len(day_counts),
+        undated_email_documents=undated_email_documents,
         earliest_message_day=min(day_counts) if day_counts else None,
         latest_message_day=max(day_counts) if day_counts else None,
         days=[MailCoverageDay(day=day, count=count) for day, count in sorted_days[:day_limit]],
@@ -128,6 +134,7 @@ async def get_mail_coverage_summary(pool: AsyncConnectionPool) -> MailCoverageSu
     return MailCoverageSummary(
         total_email_documents=full.total_email_documents,
         covered_days_count=full.covered_days_count,
+        undated_email_documents=full.undated_email_documents,
         earliest_message_day=full.earliest_message_day,
         latest_message_day=full.latest_message_day,
     )

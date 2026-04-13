@@ -10,8 +10,21 @@ interface:
   parameters: true
   sidePanel: true
   presets: true
+  agents:
+    use: true
+    create: true
+    share: false
+    public: false
 
 endpoints:
+  agents:
+    disableBuilder: false
+    capabilities:
+      - deferred_tools
+      - execute_code
+      - file_search
+      - actions
+      - tools
 
   # ── Anthropic (native format via Quatarly reverse proxy) ──────────────────
   anthropic:
@@ -36,7 +49,7 @@ endpoints:
     # ── Quatarly (OpenAI-compatible — all models) ───────────────────────────
     - name: "Quatarly"
       apiKey: "${ANTHROPIC_API_KEY}"
-      baseURL: "https://api.quatarly.cloud/v1"
+      baseURL: "https://api.quatarly.cloud/v0"
       models:
         default:
           - claude-opus-4-6
@@ -59,8 +72,8 @@ endpoints:
         - "user"
 
     # ── n8n Automation (bridge workflow — OpenAI-compatible) ────────────────
-    # Set N8N_WEBHOOK_BASE in Railway env vars after n8n is deployed.
-    # Example: N8N_WEBHOOK_BASE=https://n8n-production-xxxx.up.railway.app
+    # Set N8N_WEBHOOK_BASE in LibreChat env vars.
+    # Current deployed n8n base: https://n8n-production-f1967.up.railway.app
     - name: "n8n Automation"
       apiKey: "n8n-no-auth"
       baseURL: "${N8N_WEBHOOK_BASE}/webhook"

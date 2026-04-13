@@ -8,9 +8,11 @@ from app.schemas import (
     AssistantCitation,
     AssistantQueryRequest,
     AssistantQueryResponse,
+    LlmUsageLogRequest,
     SearchRequest,
 )
 from app.services.search import search_knowledge_base
+from app.services.usage import record_llm_usage
 
 
 async def answer_query(
@@ -93,15 +95,16 @@ async def _log_usage(
     endpoint: str,
 ) -> None:
     try:
-        async with pool.connection() as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute(
-                    """
-                    INSERT INTO llm_usage_log (model, endpoint, prompt_tokens, completion_tokens, total_tokens)
-                    VALUES (%s, %s, %s, %s, %s)
-                    """,
-                    (result.model, endpoint, result.prompt_tokens, result.completion_tokens, result.total_tokens),
-                )
+        await record_llm_usage(
+            pool=pool,
+            payload=LlmUsageLogRequest(
+                model=result.model,
+                endpoint=endpoint,
+                prompt_tokens=result.prompt_tokens,
+                completion_tokens=result.completion_tokens,
+                total_tokens=result.total_tokens,
+            ),
+        )
     except Exception:
         pass  # usage logging is best-effort, never break the main flow
 

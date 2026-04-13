@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,9 +24,28 @@ class Settings(BaseSettings):
 
     anthropic_api_key: str | None = Field(None, alias="ANTHROPIC_API_KEY")
     anthropic_model: str | None = Field(None, alias="ANTHROPIC_MODEL")
-    llm_api_url: str | None = Field(None, alias="LLM_API_URL")
-    llm_api_key: str | None = Field(None, alias="LLM_API_KEY")
-    llm_model: str | None = Field(None, alias="LLM_MODEL")
+    llm_api_url: str | None = Field(
+        "https://api.quatarly.cloud/v0/chat/completions",
+        validation_alias=AliasChoices(
+            "LLM_API_URL",
+            "QUATARLY_API_URL",
+            "QUATERLY_API_URL",
+            "ANTHROPIC_BASE_URL",
+        ),
+    )
+    llm_api_key: str | None = Field(
+        None,
+        validation_alias=AliasChoices(
+            "LLM_API_KEY",
+            "QUATARLY_API_KEY",
+            "QUATERLY_API_KEY",
+            "ANTHROPIC_API_KEY",
+        ),
+    )
+    llm_model: str | None = Field(
+        "claude-sonnet-4-6-20250929",
+        validation_alias=AliasChoices("LLM_MODEL", "QUATARLY_MODEL", "QUATERLY_MODEL"),
+    )
     embedding_api_url: str | None = Field(None, alias="EMBEDDING_API_URL")
     embedding_api_key: str | None = Field(None, alias="EMBEDDING_API_KEY")
     embedding_provider: str | None = Field(None, alias="EMBEDDING_PROVIDER")
@@ -34,6 +53,7 @@ class Settings(BaseSettings):
 
     vikunja_url: str | None = Field(None, alias="VIKUNJA_URL")
     vikunja_api_token: str | None = Field(None, alias="VIKUNJA_API_TOKEN")
+    vikunja_default_project_id: int | None = Field(None, alias="VIKUNJA_DEFAULT_PROJECT_ID")
 
     object_storage_bucket: str | None = Field(None, alias="OBJECT_STORAGE_BUCKET")
     object_storage_region: str | None = Field(None, alias="OBJECT_STORAGE_REGION")
@@ -43,6 +63,10 @@ class Settings(BaseSettings):
 
     # Optional: set your Quatarly monthly token quota to see remaining tokens in /v1/coverage/status
     llm_monthly_token_quota: int | None = Field(None, alias="LLM_MONTHLY_TOKEN_QUOTA")
+
+    # Quatarly credits API — defaults to derived from llm_api_url
+    # e.g. https://api.quatarly.cloud/v0/user/credits/{api_key}
+    quatarly_credits_base_url: str | None = Field(None, alias="QUATARLY_CREDITS_BASE_URL")
 
 
 @lru_cache(maxsize=1)

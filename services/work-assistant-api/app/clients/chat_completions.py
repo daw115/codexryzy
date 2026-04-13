@@ -22,7 +22,7 @@ class ChatCompletionsClient:
         api_key: str | None,
         model: str | None,
     ) -> None:
-        self.api_url = (api_url or "").strip()
+        self.api_url = self._normalize_api_url((api_url or "").strip())
         self.api_key = (api_key or "").strip()
         self.model = (model or "").strip()
 
@@ -81,3 +81,12 @@ class ChatCompletionsClient:
             completion_tokens=int(usage.get("completion_tokens") or 0),
             total_tokens=int(usage.get("total_tokens") or 0),
         )
+
+    @staticmethod
+    def _normalize_api_url(value: str) -> str:
+        if not value:
+            return value
+        base = value.rstrip("/")
+        if "/chat/completions" in base:
+            return base
+        return f"{base}/chat/completions"
