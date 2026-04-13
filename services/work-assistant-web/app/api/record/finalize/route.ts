@@ -1,7 +1,9 @@
+import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 
 import { isRequestAuthenticated } from "@/lib/auth";
 import { ingestMeetingAnalysis } from "@/lib/api";
+import { createLLMClient } from "@/lib/llm";
 
 type FinalizeRequest = {
   title: string;
@@ -23,10 +25,6 @@ type MeetingAnalysis = {
   action_items: ActionItem[];
   decisions: string[];
   key_topics: string[];
-};
-
-type AnthropicMessage = {
-  content: Array<{ type: string; text: string }>;
 };
 
 function buildPrompt(body: FinalizeRequest): string {
@@ -79,12 +77,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
   }
 
-  const apiUrl = process.env.LLM_API_URL?.trim().replace(/\/$/, "");
-  const apiKey = process.env.LLM_API_KEY?.trim();
-  const model = process.env.LLM_MODEL?.trim() ?? "claude-sonnet-4-6-20250929";
-
-  if (!apiUrl || !apiKey) {
-    return NextResponse.json({ detail: "LLM_API_URL and LLM_API_KEY must be set" }, { status: 500 });
+  let client: Anthropic;
+  let model: string;
+  try {
+    ({ client, model } = createLLMClient());
+  } catch (err) {
+    return NextResponse.json(
+      { detail: err instanceof Error ? err.message : "LLM not configured" },
+      { status: 500 },
+    );
   }
 
   let body: FinalizeRequest;
@@ -99,40 +100,22 @@ export async function POST(request: NextRequest) {
   }
 
   // Generate structured analysis with Claude
-  let llmResponse: Response;
+  let rawText: string;
   try {
-    llmResponse = await fetch(`${apiUrl}/v1/messages`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 2048,
-        messages: [
-          {
-            role: "user",
-            content: buildPrompt(body),
-          },
-        ],
-      }),
+    const message = await client.messages.create({
+      model,
+      max_tokens: 2048,
+      messages: [{ role: "user", content: buildPrompt(body) }],
     });
+
+    const textBlock = message.content.find((c): c is Anthropic.TextBlock => c.type === "text");
+    rawText = textBlock?.text ?? "{}";
   } catch (err) {
     return NextResponse.json(
       { detail: `LLM request failed: ${err instanceof Error ? err.message : String(err)}` },
       { status: 502 },
     );
   }
-
-  if (!llmResponse.ok) {
-    const errText = await llmResponse.text();
-    return NextResponse.json({ detail: `LLM error ${llmResponse.status}: ${errText}` }, { status: 502 });
-  }
-
-  const llmData = (await llmResponse.json()) as AnthropicMessage;
-  const rawText = llmData.content.find((c) => c.type === "text")?.text ?? "{}";
 
   let analysis: MeetingAnalysis;
   try {
