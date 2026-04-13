@@ -13,7 +13,7 @@ import urllib.error
 
 # ── CONFIG — paste your values here ───────────────────────────────────────────
 N8N_URL   = "https://n8n-production-f1967.up.railway.app"
-JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NDU1NzRkZi05ZjViLTQ3NTgtYmI5Ny01NTJmOTQ2ZDlmMWIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiMTg0OWRhOWUtMzI1ZS00MmZlLWFiODQtYTFkMGYxODk2NjFiIiwiaWF0IjoxNzc2MDQ3NjgxLCJleHAiOjE3Nzg1NTg0MDB9.bRK8m7YkoxVGd7uyICpp-9I_8KCgeCuu4g6nNBA0ht0"
+JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NDU1NzRkZi05ZjViLTQ3NTgtYmI5Ny01NTJmOTQ2ZDlmMWIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiMDUyMjhhNWEtZTU5Ny00MjdhLWE1MTItYWRjOTBlNjI3ODI3IiwiaWF0IjoxNzc2MDQ0MzU5LCJleHAiOjE3Nzg1NTg0MDB9.hvvJEWeg4pbr_RyU2b-aiNRpvvVxCIVEelIVazves6s"
 API_KEY   = "qua-3fe84831eb5df3856a4790c2461ae1bf"
 MODEL     = "claude-sonnet-4-6-20250929"
 API_CHAT  = "https://api.quatarly.cloud/v1/chat/completions"
