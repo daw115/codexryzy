@@ -76,3 +76,4 @@ endpoints:
         - "frequency_penalty"
         - "presence_penalty"
         - "stop"
+        - "stream"
