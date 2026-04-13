@@ -157,3 +157,12 @@ export function BellIcon(props: IconProps) {
     </BaseIcon>
   );
 }
+
+export function RecordIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="3.5" fill="currentColor" stroke="none" />
+    </BaseIcon>
+  );
+}
