@@ -31,8 +31,13 @@
           ]
         },
         "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"claude-3-5-sonnet-20241022\",\n  \"max_tokens\": {{ $json.body.max_tokens || 1024 }},\n  \"messages\": {{ JSON.stringify($json.body.messages) }}\n}",
+        "contentType": "json",
+        "body": {
+          "model": "claude-sonnet-4-6-20250929",
+          "max_tokens": "={{ $json.body.max_tokens || 1024 }}",
+          "messages": "={{ $json.body.messages }}",
+          "stream": false
+        },
         "options": {}
       },
       "id": "d1b2c3d4-0004-0004-0004-000000000002",
