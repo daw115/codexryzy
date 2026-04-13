@@ -1,0 +1,42 @@
+version: 1.1.4
+
+# ============================================================
+# LibreChat Configuration - Railway Deployment
+# ============================================================
+
+cache: true
+
+# Interface settings
+interface:
+  # Enable Artifacts (code execution / rendered outputs)
+  artifacts: true
+  # Enable Memory (persistent conversation memory)
+  memory: true
+  endpointsMenu: true
+  modelSelect: true
+  parameters: true
+  sidePanel: true
+  presets: true
+
+# ============================================================
+# AI Endpoints
+# ============================================================
+endpoints:
+  anthropic:
+    # Uses ANTHROPIC_API_KEY environment variable automatically
+    apiKey: "${ANTHROPIC_API_KEY}"
+    models:
+      default:
+        - claude-opus-4-6
+        - claude-sonnet-4-6
+      fetch: false
+    titleConvo: true
+    titleModel: "claude-sonnet-4-6"
+    summarize: false
+    summaryModel: "claude-sonnet-4-6"
+    forcePrompt: false
+    dropParams:
+      - "stop"
+      - "user"
+      - "frequency_penalty"
+      - "presence_penalty"
