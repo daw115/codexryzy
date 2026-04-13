@@ -10,6 +10,7 @@ import {
   MailIcon,
   MeetingIcon,
   OperationsIcon,
+  RecordIcon,
   SearchIcon,
   TasksIcon,
 } from "@/components/icons";
@@ -56,6 +57,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
               <NavLink href="/schedule" label="Kalendarz" icon={<CalendarIcon width={18} height={18} />} />
               <NavLink href="/knowledge" label="Wiedza" icon={<KnowledgeIcon width={18} height={18} />} />
               <NavLink href="/meetings" label="Spotkania" icon={<MeetingIcon width={18} height={18} />} />
+              <NavLink href="/record" label="Nagrywaj" icon={<RecordIcon width={18} height={18} />} />
               <NavLink href="/operations" label="Operacje" icon={<OperationsIcon width={18} height={18} />} />
             </nav>
           </div>

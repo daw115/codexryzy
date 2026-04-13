@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { isRequestAuthenticated } from "@/lib/auth";
-import { getCerebroMeetingDigests } from "@/lib/cerebro";
+import { getCerebroMeetings } from "@/lib/cerebro";
 
 export async function GET(request: NextRequest) {
   if (!isRequestAuthenticated(request)) {
@@ -11,7 +11,8 @@ export async function GET(request: NextRequest) {
   const url = request.nextUrl;
   const limitParam = Number(url.searchParams.get("limit") ?? 30);
   const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(Math.trunc(limitParam), 100) : 30;
-  const meetings = await getCerebroMeetingDigests({
+
+  const meetings = await getCerebroMeetings({
     limit,
     date_from: url.searchParams.get("date_from") ?? undefined,
     date_to: url.searchParams.get("date_to") ?? undefined,
