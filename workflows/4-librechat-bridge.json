@@ -4,7 +4,7 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "librechat",
+        "path": "chat/completions",
         "responseMode": "lastNode",
         "options": {}
       },
@@ -13,7 +13,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [240, 300],
-      "webhookId": "librechat"
+      "webhookId": "chat-completions"
     },
     {
       "parameters": {
@@ -95,5 +95,5 @@
     { "name": "bridge" }
   ],
   "pinData": {},
-  "notes": "This workflow exposes an OpenAI-compatible endpoint at /webhook/librechat\nLibreChat calls this as a custom endpoint — n8n acts as middleware.\nYou can add logic here: logging, routing, pre/post-processing, automation triggers."
+  "notes": "This workflow exposes an OpenAI-compatible endpoint at /webhook/chat/completions\nLibreChat calls {N8N_WEBHOOK_BASE}/webhook/chat/completions — n8n acts as middleware.\nYou can add logic here: logging, routing, pre/post-processing, automation triggers."
 }
