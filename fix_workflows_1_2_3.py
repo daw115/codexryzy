@@ -20,7 +20,7 @@ API_CHAT  = "https://api.quatarly.cloud/v1/chat/completions"
 # ──────────────────────────────────────────────────────────────────────────────
 
 HEADERS_AUTH = {
-    "Authorization": f"Bearer {JWT_TOKEN}",
+    "X-N8N-API-KEY": JWT_TOKEN,
     "Content-Type": "application/json",
 }
 
