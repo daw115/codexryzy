@@ -1,4 +1,4 @@
-version: 1.1.4
+version: 1.3.8
 
 cache: true
 
@@ -13,7 +13,7 @@ interface:
 
 endpoints:
 
-  # Native Anthropic format — routed through Quatarly via ANTHROPIC_REVERSE_PROXY
+  # ── Anthropic (native format via Quatarly reverse proxy) ──────────────────
   anthropic:
     apiKey: "${ANTHROPIC_API_KEY}"
     models:
@@ -31,8 +31,9 @@ endpoints:
       - "frequency_penalty"
       - "presence_penalty"
 
-  # OpenAI-compatible path — all models via Quatarly
   custom:
+
+    # ── Quatarly (OpenAI-compatible — all models) ───────────────────────────
     - name: "Quatarly"
       apiKey: "${ANTHROPIC_API_KEY}"
       baseURL: "https://api.quatarly.cloud/v1"
@@ -56,3 +57,22 @@ endpoints:
       modelDisplayLabel: "Quatarly"
       dropParams:
         - "user"
+
+    # ── n8n Automation (bridge workflow — OpenAI-compatible) ────────────────
+    # Set N8N_WEBHOOK_BASE in Railway env vars after n8n is deployed.
+    # Example: N8N_WEBHOOK_BASE=https://n8n-production-xxxx.up.railway.app
+    - name: "n8n Automation"
+      apiKey: "n8n-no-auth"
+      baseURL: "${N8N_WEBHOOK_BASE}/webhook"
+      models:
+        default:
+          - librechat-bridge
+        fetch: false
+      titleConvo: false
+      forcePrompt: false
+      modelDisplayLabel: "n8n"
+      dropParams:
+        - "user"
+        - "frequency_penalty"
+        - "presence_penalty"
+        - "stop"

@@ -1,0 +1,105 @@
+{
+  "name": "1 - Email Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "email-assistant",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "email-assistant"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.quatarly.cloud/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.ANTHROPIC_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "model": "claude-sonnet-4-6",
+          "max_tokens": 1024,
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are an email assistant. Summarize emails clearly and concisely. Extract: sender, subject, key points, required actions."
+            },
+            {
+              "role": "user",
+              "content": "={{ $json.body.emailContent || $json.body.message || 'No content provided' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000002",
+      "name": "Claude - Summarize Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { summary: $json.choices[0].message.content, model: $json.model, tokens_used: $json.usage.total_tokens } }}",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000003",
+      "name": "Return Summary",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [720, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Claude - Summarize Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude - Summarize Email": {
+      "main": [
+        [
+          {
+            "node": "Return Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    { "name": "librechat-integration" },
+    { "name": "email" }
+  ],
+  "pinData": {}
+}
