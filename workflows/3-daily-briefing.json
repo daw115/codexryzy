@@ -4,12 +4,7 @@
     {
       "parameters": {
         "rule": {
-          "interval": [
-            {
-              "field": "cronExpression",
-              "expression": "0 8 * * 1-5"
-            }
-          ]
+          "interval": [{"field": "cronExpression", "expression": "0 8 * * 1-5"}]
         }
       },
       "id": "c1b2c3d4-0003-0003-0003-000000000001",
@@ -27,7 +22,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.ANTHROPIC_API_KEY }}"
+              "value": "Bearer qua-REPLACE_WITH_YOUR_KEY"
             },
             {
               "name": "Content-Type",
@@ -36,21 +31,8 @@
           ]
         },
         "sendBody": true,
-        "contentType": "json",
-        "body": {
-          "model": "claude-sonnet-4-6",
-          "max_tokens": 1024,
-          "messages": [
-            {
-              "role": "system",
-              "content": "You are a personal productivity assistant. Create a concise, motivating daily briefing. Include: greeting, date, suggested focus areas for today, a productivity tip, and a motivational quote. Keep it under 200 words."
-            },
-            {
-              "role": "user",
-              "content": "=Generate my daily briefing for {{ $now.toFormat('EEEE, MMMM d, yyyy') }}."
-            }
-          ]
-        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({model: 'claude-sonnet-4-6-20250929', max_tokens: 1024, messages: [{role: 'system', content: 'You are a personal productivity assistant. Create a concise, motivating daily briefing. Include: greeting, date, suggested focus areas for today, a productivity tip, and a motivational quote. Keep it under 200 words.'}, {role: 'user', content: 'Generate my daily briefing for ' + $now.toFormat('EEEE, MMMM d, yyyy') + '.'}], stream: false}) }}",
         "options": {}
       },
       "id": "c1b2c3d4-0003-0003-0003-000000000002",
@@ -62,20 +44,15 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "url": "={{ $vars.SLACK_WEBHOOK_URL }}",
         "sendHeaders": true,
         "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
+          "parameters": [{"name": "Content-Type", "value": "application/json"}]
         },
         "sendBody": true,
         "contentType": "json",
         "body": {
-          "text": "=*Daily Briefing* 🌅\n\n{{ $json.choices[0].message.content }}"
+          "text": "=*Daily Briefing*\n\n{{ $json.choices[0].message.content }}"
         },
         "options": {}
       },
@@ -83,43 +60,19 @@
       "name": "Send to Slack",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [720, 300],
-      "notes": "Set SLACK_WEBHOOK_URL env var in n8n, or replace with Email node"
+      "position": [720, 300]
     }
   ],
   "connections": {
     "Schedule - 8:00 AM Weekdays": {
-      "main": [
-        [
-          {
-            "node": "Claude - Generate Briefing",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Claude - Generate Briefing", "type": "main", "index": 0}]]
     },
     "Claude - Generate Briefing": {
-      "main": [
-        [
-          {
-            "node": "Send to Slack",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Send to Slack", "type": "main", "index": 0}]]
     }
   },
   "active": false,
-  "settings": {
-    "executionOrder": "v1",
-    "timezone": "Europe/Warsaw"
-  },
-  "tags": [
-    { "name": "schedule" },
-    { "name": "briefing" }
-  ],
-  "pinData": {},
-  "notes": "Workflow 3: Daily Briefing\n- Runs Mon-Fri at 8:00 AM (Warsaw time)\n- Generates briefing with Claude\n- Sends to Slack (set SLACK_WEBHOOK_URL) or replace Send node with Email/Telegram\n- To use Notion tasks: add Notion node before Claude and pass task list in message"
+  "settings": {"executionOrder": "v1", "timezone": "Europe/Warsaw"},
+  "tags": [{"name": "schedule"}, {"name": "briefing"}],
+  "pinData": {}
 }

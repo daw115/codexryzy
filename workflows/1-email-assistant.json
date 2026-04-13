@@ -24,7 +24,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.ANTHROPIC_API_KEY }}"
+              "value": "Bearer qua-REPLACE_WITH_YOUR_KEY"
             },
             {
               "name": "Content-Type",
@@ -33,21 +33,8 @@
           ]
         },
         "sendBody": true,
-        "contentType": "json",
-        "body": {
-          "model": "claude-sonnet-4-6",
-          "max_tokens": 1024,
-          "messages": [
-            {
-              "role": "system",
-              "content": "You are an email assistant. Summarize emails clearly and concisely. Extract: sender, subject, key points, required actions."
-            },
-            {
-              "role": "user",
-              "content": "={{ $json.body.emailContent || $json.body.message || 'No content provided' }}"
-            }
-          ]
-        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({model: 'claude-sonnet-4-6-20250929', max_tokens: 1024, messages: [{role: 'system', content: 'You are an email assistant. Summarize emails clearly and concisely. Extract: sender, subject, key points, required actions.'}, {role: 'user', content: $json.body.emailContent || $json.body.message || 'No content provided'}], stream: false}) }}",
         "options": {}
       },
       "id": "a1b2c3d4-0001-0001-0001-000000000002",
@@ -71,35 +58,14 @@
   ],
   "connections": {
     "Webhook": {
-      "main": [
-        [
-          {
-            "node": "Claude - Summarize Email",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Claude - Summarize Email", "type": "main", "index": 0}]]
     },
     "Claude - Summarize Email": {
-      "main": [
-        [
-          {
-            "node": "Return Summary",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Return Summary", "type": "main", "index": 0}]]
     }
   },
   "active": true,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "tags": [
-    { "name": "librechat-integration" },
-    { "name": "email" }
-  ],
+  "settings": {"executionOrder": "v1"},
+  "tags": [{"name": "librechat-integration"}, {"name": "email"}],
   "pinData": {}
 }

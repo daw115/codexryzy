@@ -42,7 +42,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.ANTHROPIC_API_KEY }}"
+              "value": "Bearer qua-REPLACE_WITH_YOUR_KEY"
             },
             {
               "name": "Content-Type",
@@ -51,21 +51,8 @@
           ]
         },
         "sendBody": true,
-        "contentType": "json",
-        "body": {
-          "model": "claude-sonnet-4-6",
-          "max_tokens": 2048,
-          "messages": [
-            {
-              "role": "system",
-              "content": "You are a document analysis expert. Analyze the provided document and return a structured JSON response with: { \"summary\": string, \"key_points\": string[], \"action_items\": string[], \"sentiment\": string, \"topics\": string[] }"
-            },
-            {
-              "role": "user",
-              "content": "=Analyze this document:\n\n{{ $json.data || $json.body }}"
-            }
-          ]
-        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({model: 'claude-sonnet-4-6-20250929', max_tokens: 2048, messages: [{role: 'system', content: 'You are a document analysis expert. Analyze the provided document and return a structured JSON response with: { \"summary\": string, \"key_points\": string[], \"action_items\": string[], \"sentiment\": string, \"topics\": string[] }'}, {role: 'user', content: 'Analyze this document:\\n\\n' + ($json.data || $json.body)}], stream: false}) }}",
         "options": {}
       },
       "id": "b1b2c3d4-0002-0002-0002-000000000003",
@@ -89,46 +76,17 @@
   ],
   "connections": {
     "Webhook": {
-      "main": [
-        [
-          {
-            "node": "Fetch Document",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Fetch Document", "type": "main", "index": 0}]]
     },
     "Fetch Document": {
-      "main": [
-        [
-          {
-            "node": "Claude - Analyze Document",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Claude - Analyze Document", "type": "main", "index": 0}]]
     },
     "Claude - Analyze Document": {
-      "main": [
-        [
-          {
-            "node": "Return Analysis",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Return Analysis", "type": "main", "index": 0}]]
     }
   },
   "active": true,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "tags": [
-    { "name": "librechat-integration" },
-    { "name": "documents" }
-  ],
+  "settings": {"executionOrder": "v1"},
+  "tags": [{"name": "librechat-integration"}, {"name": "documents"}],
   "pinData": {}
 }
