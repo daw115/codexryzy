@@ -1,12 +1,7 @@
 version: 1.1.4
 
-# ============================================================
-# LibreChat Configuration - Railway Deployment (Quatarly proxy)
-# ============================================================
-
 cache: true
 
-# Interface settings
 interface:
   artifacts: true
   memory: true
@@ -16,26 +11,15 @@ interface:
   sidePanel: true
   presets: true
 
-# ============================================================
-# AI Endpoints
-# ============================================================
 endpoints:
 
-  # ----------------------------------------------------------
-  # 1. Anthropic (native format, routed through Quatarly)
-  #    Env var: ANTHROPIC_REVERSE_PROXY=https://api.quatarly.cloud
-  #    Gives: claude-opus-4-6, claude-sonnet-4-6, claude-haiku
-  # ----------------------------------------------------------
+  # Native Anthropic format — routed through Quatarly via ANTHROPIC_REVERSE_PROXY
   anthropic:
     apiKey: "${ANTHROPIC_API_KEY}"
-    # ANTHROPIC_REVERSE_PROXY is read automatically by LibreChat
-    # — set it in Railway env vars, no need to repeat it here.
     models:
-      default:
-        - claude-opus-4-6
-        - claude-sonnet-4-6
-        - claude-haiku-4-5-20251001
-      fetch: false
+      - claude-opus-4-6
+      - claude-sonnet-4-6
+      - claude-haiku-4-5-20251001
     titleConvo: true
     titleModel: "claude-sonnet-4-6"
     summarize: false
@@ -47,28 +31,20 @@ endpoints:
       - "frequency_penalty"
       - "presence_penalty"
 
-  # ----------------------------------------------------------
-  # 2. Quatarly (OpenAI-compatible path)
-  #    baseURL: https://api.quatarly.cloud/v1
-  #    Gives: all Claude variants + thinking + Gemini + GPT-5.x
-  # ----------------------------------------------------------
+  # OpenAI-compatible path — all models via Quatarly
   custom:
     - name: "Quatarly"
       apiKey: "${ANTHROPIC_API_KEY}"
       baseURL: "https://api.quatarly.cloud/v1"
       models:
         default:
-          # Claude — standard
           - claude-opus-4-6
           - claude-sonnet-4-6
           - claude-haiku-4-5-20251001
-          # Claude — thinking / extended-thinking variants
           - claude-opus-4-6-thinking
           - claude-sonnet-4-6-thinking
-          # Gemini
           - gemini-3.1-pro
           - gemini-3-flash
-          # GPT
           - gpt-5
           - gpt-5-mini
         fetch: false
