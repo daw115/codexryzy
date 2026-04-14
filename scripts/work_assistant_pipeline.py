@@ -250,6 +250,26 @@ def build_ingest_payload(
     skip_if_checksum_matches: bool = True,
 ) -> dict:
     chunks = chunk_text(normalized_text)
+
+    # Extract tasks from analysis action_items
+    tasks = []
+    action_items = analysis.get("metadata", {}).get("action_items", [])
+    for item in action_items:
+        tasks.append({
+            "external_task_id": f"{external_id}_{item.get('title', '')[:50]}",
+            "title": item.get("title", ""),
+            "description": item.get("description", ""),
+            "due_at": item.get("due_at"),
+            "priority": 1 if analysis.get("priority") == "high" else 2 if analysis.get("priority") == "normal" else 3,
+            "status": "open",
+            "metadata": {
+                "source": "llm_analysis",
+                "project": item.get("project", "general"),
+                "area": item.get("area", "general"),
+                "tags": item.get("tags", []),
+            },
+        })
+
     return {
         "source_type": source_type,
         "external_id": external_id,
@@ -276,7 +296,7 @@ def build_ingest_payload(
             }
             for index, chunk in enumerate(chunks)
         ],
-        "tasks": [],
+        "tasks": tasks,
         "skip_if_checksum_matches": skip_if_checksum_matches,
     }
 
