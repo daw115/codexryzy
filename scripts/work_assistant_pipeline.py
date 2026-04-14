@@ -253,13 +253,14 @@ def build_ingest_payload(
 
     # Extract tasks from analysis action_items
     tasks = []
-    action_items = analysis.get("metadata", {}).get("action_items", [])
+    # Try both locations: analysis.action_items and analysis.metadata.action_items
+    action_items = analysis.get("action_items", []) or analysis.get("metadata", {}).get("action_items", [])
     for item in action_items:
         tasks.append({
             "external_task_id": f"{external_id}_{item.get('title', '')[:50]}",
             "title": item.get("title", ""),
             "description": item.get("description", ""),
-            "due_at": item.get("due_at"),
+            "due_at": item.get("due_date") or item.get("due_at"),  # Try both field names
             "priority": 1 if analysis.get("priority") == "high" else 2 if analysis.get("priority") == "normal" else 3,
             "status": "open",
             "metadata": {
