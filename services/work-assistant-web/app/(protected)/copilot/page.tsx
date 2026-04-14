@@ -1,24 +1,23 @@
 import { AssistantConsole } from "@/components/assistant-console";
+import { MessageSquare } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default function CopilotPage() {
   return (
-    <>
-      <section className="sectionCard">
-        <div className="sectionHeader">
-          <div>
-            <span className="sectionEyebrow">AI Copilot</span>
-            <h1 className="pageTitleCompact">Chat AI nad Twoja baza wiedzy</h1>
-          </div>
-        </div>
-        <p className="sectionBodyCopy">
-          To jest warstwa pytan i odpowiedzi. Copilot ma korzystac z maili, dokumentow, taskow i
-          ich relacji, a nie odpowiadac z pamieci modelu.
+    <div className="flex flex-col h-[calc(100vh-8rem)] max-w-4xl mx-auto">
+      <div className="mb-4 shrink-0">
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <MessageSquare className="h-6 w-6 text-primary" />
+          Agent AI
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Chat AI nad Twoją bazą wiedzy — maile, dokumenty, taski
         </p>
-      </section>
-
-      <AssistantConsole />
-    </>
+      </div>
+      <div className="flex-1 min-h-0">
+        <AssistantConsole />
+      </div>
+    </div>
   );
 }

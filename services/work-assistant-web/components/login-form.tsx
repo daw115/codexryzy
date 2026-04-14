@@ -1,8 +1,10 @@
 "use client";
 
 import { useFormState, useFormStatus } from "react-dom";
-
 import { loginAction, type LoginActionState } from "@/app/login/actions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const INITIAL_STATE: LoginActionState = {};
 
@@ -10,20 +12,22 @@ export function LoginForm() {
   const [state, formAction] = useFormState(loginAction, INITIAL_STATE);
 
   return (
-    <form action={formAction} className="loginForm">
-      <label className="field">
-        <span className="fieldLabel">Hasło właściciela</span>
-        <input
-          className="fieldInput"
+    <form action={formAction} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="password">Hasło właściciela</Label>
+        <Input
+          id="password"
           type="password"
           name="password"
           placeholder="Wpisz hasło"
           autoComplete="current-password"
           required
         />
-      </label>
+      </div>
 
-      {state.error ? <p className="formError">{state.error}</p> : null}
+      {state.error && (
+        <p className="text-sm text-destructive">{state.error}</p>
+      )}
 
       <SubmitButton />
     </form>
@@ -32,10 +36,9 @@ export function LoginForm() {
 
 function SubmitButton() {
   const { pending } = useFormStatus();
-
   return (
-    <button className="primaryButton" type="submit" disabled={pending}>
+    <Button type="submit" disabled={pending} className="w-full">
       {pending ? "Logowanie..." : "Wejdź do dashboardu"}
-    </button>
+    </Button>
   );
 }

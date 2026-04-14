@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 import { formatDate, formatDay } from "@/lib/format";
 import type { DocumentDetailResponse, DocumentListItem } from "@/lib/types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, Mail, Sparkles, RefreshCw } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type MailWorkbenchProps = {
   initialDocuments: DocumentListItem[];
@@ -25,82 +30,50 @@ export function MailWorkbench({ initialDocuments }: MailWorkbenchProps) {
       setDetail(null);
       return;
     }
-
     let cancelled = false;
     setLoadingDetail(true);
     setError(null);
-
     fetch(`/api/mailbox/document/${selectedId}`)
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(await response.text());
-        }
-        return (await response.json()) as DocumentDetailResponse;
+      .then(async (r) => {
+        if (!r.ok) throw new Error(await r.text());
+        return (await r.json()) as DocumentDetailResponse;
       })
-      .then((data) => {
-        if (!cancelled) {
-          setDetail(data);
-        }
-      })
-      .catch((requestError) => {
-        if (!cancelled) {
-          setError(requestError instanceof Error ? requestError.message : "Nie udalo sie pobrac maila.");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoadingDetail(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
+      .then((data) => { if (!cancelled) setDetail(data); })
+      .catch((e) => { if (!cancelled) setError(e instanceof Error ? e.message : "Błąd pobierania"); })
+      .finally(() => { if (!cancelled) setLoadingDetail(false); });
+    return () => { cancelled = true; };
   }, [selectedId]);
 
   async function search() {
     setSearching(true);
     setError(null);
     try {
-      const response = await fetch("/api/mailbox/search", {
+      const r = await fetch("/api/mailbox/search", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query,
-          limit: 24,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, limit: 24 }),
       });
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-      const data = (await response.json()) as { documents: DocumentListItem[] };
+      if (!r.ok) throw new Error(await r.text());
+      const data = (await r.json()) as { documents: DocumentListItem[] };
       setDocuments(data.documents);
       setSelectedId(data.documents[0]?.document_id ?? null);
       setReplyDraft(null);
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Search failed");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Search failed");
     } finally {
       setSearching(false);
     }
   }
 
   async function generateDraft() {
-    if (!detail) {
-      return;
-    }
-
+    if (!detail) return;
     setDraftPending(true);
     setReplyDraft(null);
     setError(null);
-
     try {
-      const response = await fetch("/api/assistant/query", {
+      const r = await fetch("/api/assistant/query", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `Przygotuj profesjonalny szkic odpowiedzi na mail "${detail.title}" na podstawie mojej bazy wiedzy, bez zmyslania faktow. Jesli brak danych, napisz czego brakuje.`,
           search_limit: 8,
@@ -109,202 +82,182 @@ export function MailWorkbench({ initialDocuments }: MailWorkbenchProps) {
           max_task_contexts: 5,
         }),
       });
-
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-
-      const data = (await response.json()) as { answer: string };
+      if (!r.ok) throw new Error(await r.text());
+      const data = (await r.json()) as { answer: string };
       setReplyDraft(data.answer);
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Nie udalo sie wygenerowac odpowiedzi.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Błąd generowania odpowiedzi");
     } finally {
       setDraftPending(false);
     }
   }
 
   return (
-    <div className="mailWorkbench">
-      <section className="sectionCard">
-        <div className="sectionHeader">
-          <div>
-            <span className="sectionEyebrow">Reader</span>
-            <h2 className="sectionTitle">Czytaj kazdy mail i steruj odpowiedzia</h2>
-          </div>
-        </div>
-
-        <div className="assistantComposer">
-          <input
-            className="fieldInput"
+    <div className="space-y-4">
+      {/* Search bar */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            className="pl-10 bg-card"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Szukaj po tytule, tresci, projekcie lub temacie"
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") void search(); }}
+            placeholder="Szukaj po tytule, treści, projekcie..."
           />
-          <div className="assistantActions">
-            <button className="primaryButton" type="button" onClick={search} disabled={searching}>
-              {searching ? "Szukam..." : "Szukaj maili"}
-            </button>
-            <button
-              className="ghostButton"
-              type="button"
-              onClick={() => {
-                setQuery("");
-                void search();
-              }}
-              disabled={searching}
+        </div>
+        <Button onClick={() => void search()} disabled={searching} variant="default">
+          {searching ? <RefreshCw className="h-4 w-4 animate-spin" /> : "Szukaj"}
+        </Button>
+        <Button
+          onClick={() => { setQuery(""); void search(); }}
+          disabled={searching}
+          variant="outline"
+        >
+          Najnowsze
+        </Button>
+      </div>
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
+
+      {/* Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        {/* List */}
+        <div className="lg:col-span-2 space-y-2 max-h-[calc(100vh-16rem)] overflow-y-auto">
+          {documents.map((doc) => (
+            <Card
+              key={doc.document_id}
+              className={cn(
+                "cursor-pointer transition-colors hover:border-primary/30",
+                selectedId === doc.document_id
+                  ? "border-primary bg-primary/5"
+                  : "bg-card",
+              )}
+              onClick={() => { setSelectedId(doc.document_id); setReplyDraft(null); }}
             >
-              Pokaz najnowsze
-            </button>
-          </div>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{doc.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                      {doc.summary ?? "Brak streszczenia"}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className="text-xs text-muted-foreground">
+                      {doc.message_day ? formatDay(doc.message_day) : "—"}
+                    </span>
+                    <Badge variant="secondary" className="text-xs">
+                      {doc.category ?? "—"}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        {error ? <p className="formError">{error}</p> : null}
-      </section>
+        {/* Detail */}
+        <div className="lg:col-span-3">
+          {loadingDetail ? (
+            <Card className="bg-card">
+              <CardContent className="p-12 text-center text-muted-foreground text-sm">
+                Ładuję mail...
+              </CardContent>
+            </Card>
+          ) : !detail ? (
+            <Card className="bg-card">
+              <CardContent className="p-12 text-center text-muted-foreground">
+                <Mail className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                <p>Wybierz mail z listy</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="bg-card">
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between gap-3">
+                  <CardTitle className="text-base leading-snug">{detail.title}</CardTitle>
+                  <Button size="sm" onClick={generateDraft} disabled={draftPending}>
+                    {draftPending ? (
+                      <><RefreshCw className="h-3 w-3 mr-1 animate-spin" /> AI pisze...</>
+                    ) : (
+                      <><Sparkles className="h-3 w-3 mr-1" /> Odpowiedz</>
+                    )}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Metadata chips */}
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline">{detail.analysis?.category ?? "uncategorized"}</Badge>
+                  <Badge variant="outline">{detail.analysis?.priority ?? "normal"}</Badge>
+                  <Badge variant="secondary">{formatDate(detail.updated_at)}</Badge>
+                </div>
 
-      <div className="mailGrid">
-        <section className="sectionCard sectionCardColumn">
-          <div className="sectionHeader">
-            <div>
-              <span className="sectionEyebrow">Lista</span>
-              <h2 className="sectionTitle">Inbox knowledge base</h2>
-            </div>
-            <div className="sectionNote">{documents.length} pozycji</div>
-          </div>
-
-          <div className="scrollPanel">
-            <div className="signalList">
-              {documents.map((document) => (
-                <button
-                  key={document.document_id}
-                  type="button"
-                  className={`mailListItem${selectedId === document.document_id ? " mailListItemActive" : ""}`}
-                  onClick={() => {
-                    setSelectedId(document.document_id);
-                    setReplyDraft(null);
-                  }}
-                >
-                  <div className="listCardHeader">
-                    <h3 className="listCardTitle">{document.title}</h3>
-                    <span className="statusPill">
-                      {document.message_day ? formatDay(document.message_day) : "bez daty"}
-                    </span>
+                {/* Summary */}
+                {detail.analysis?.summary && (
+                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
+                    <p className="text-xs font-semibold text-primary mb-1">Podsumowanie AI</p>
+                    <p className="text-sm text-foreground/80">{detail.analysis.summary}</p>
                   </div>
-                  <p className="listCardCopy">{document.summary ?? "Brak streszczenia."}</p>
-                  <div className="listCardMeta">
-                    {document.category ?? "uncategorized"} / {document.priority ?? "normal"}
+                )}
+
+                {/* Action items */}
+                {detail.analysis?.action_items?.length ? (
+                  <div className="p-3 rounded-lg bg-warning/5 border border-warning/10">
+                    <p className="text-xs font-semibold text-warning mb-2">Action Items</p>
+                    <ul className="space-y-1">
+                      {detail.analysis.action_items.map((item, i) => (
+                        <li key={i} className="text-sm text-foreground/80 flex gap-2">
+                          <span className="text-warning shrink-0">›</span>
+                          <span>
+                            <strong>{String(item.title ?? item.action ?? `Akcja ${i + 1}`)}</strong>
+                            {Boolean(item.description || item.deadline) && (
+                              <span className="text-muted-foreground"> · {String(item.description ?? item.deadline)}</span>
+                            )}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
+                ) : null}
 
-        <section className="sectionCard sectionCardColumn">
-          <div className="sectionHeader">
-            <div>
-              <span className="sectionEyebrow">Reader</span>
-              <h2 className="sectionTitle">Pelny mail i wynik analizy</h2>
-            </div>
-            {detail ? (
-              <button className="primaryButton" type="button" onClick={generateDraft} disabled={draftPending}>
-                {draftPending ? "AI pisze..." : "Wygeneruj odpowiedz"}
-              </button>
-            ) : null}
-          </div>
-
-          {loadingDetail ? <div className="emptyState">Laduje mail...</div> : null}
-          {!loadingDetail && !detail ? <div className="emptyState">Wybierz mail z listy.</div> : null}
-
-          {detail ? (
-            <div className="readerPanel">
-              <div className="miniGrid">
-                <div className="miniStat">
-                  <span>Kategoria</span>
-                  <strong>{detail.analysis?.category ?? "uncategorized"}</strong>
-                </div>
-                <div className="miniStat">
-                  <span>Priorytet</span>
-                  <strong>{detail.analysis?.priority ?? "normal"}</strong>
-                </div>
-                <div className="miniStat">
-                  <span>Aktualizacja</span>
-                  <strong>{formatDate(detail.updated_at)}</strong>
-                </div>
-              </div>
-
-              <div className="calloutCard">
-                <strong>{detail.title}</strong>
-                <p>{detail.analysis?.summary ?? "Brak streszczenia od analizy."}</p>
-              </div>
-
-              {detail.analysis?.action_items?.length ? (
-                <div className="stack">
-                  <div className="sectionHeader">
-                    <div>
-                      <span className="sectionEyebrow">Action items</span>
-                      <h3 className="sectionTitle sectionTitleSmall">Zadania wyciagniete z maila</h3>
+                {/* Linked tasks */}
+                {detail.tasks.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">Powiązane taski ({detail.tasks.length})</p>
+                    <div className="space-y-1.5">
+                      {detail.tasks.map((task) => (
+                        <div key={task.external_task_id} className="flex items-center justify-between gap-2 p-2 rounded bg-muted/30">
+                          <p className="text-xs truncate">{task.title}</p>
+                          <Badge variant="outline" className="text-xs shrink-0">{task.status}</Badge>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  <div className="signalList">
-                    {detail.analysis.action_items.map((item, index) => (
-                      <article className="listCard" key={`action-${index}`}>
-                        <div className="listCardHeader">
-                          <h4 className="listCardTitle">{String(item.title ?? item.action ?? `Akcja ${index + 1}`)}</h4>
-                          <span className="statusPill">{String(item.owner ?? "do ustalenia")}</span>
-                        </div>
-                        <p className="listCardCopy">{String(item.description ?? item.deadline ?? "Brak opisu")}</p>
-                      </article>
-                    ))}
+                )}
+
+                {/* Reply draft */}
+                {replyDraft && (
+                  <div className="p-3 rounded-lg bg-success/5 border border-success/20">
+                    <p className="text-xs font-semibold text-success mb-2">Szkic odpowiedzi AI</p>
+                    <p className="text-sm text-foreground/80 whitespace-pre-wrap">{replyDraft}</p>
                   </div>
-                </div>
-              ) : null}
+                )}
 
-              {detail.tasks.length ? (
-                <div className="stack">
-                  <div className="sectionHeader">
-                    <div>
-                      <span className="sectionEyebrow">Linked tasks</span>
-                      <h3 className="sectionTitle sectionTitleSmall">Taski powiazane z tym mailem</h3>
-                    </div>
+                {/* Raw body */}
+                {detail.extracted_text && (
+                  <div className="border-t border-border pt-3">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">Treść maila</p>
+                    <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono max-h-48 overflow-y-auto">
+                      {detail.extracted_text}
+                    </pre>
                   </div>
-                  <div className="signalList">
-                    {detail.tasks.map((task) => (
-                      <article className="listCard" key={task.external_task_id}>
-                        <div className="listCardHeader">
-                          <h4 className="listCardTitle">{task.title}</h4>
-                          <span className="priorityPill">{task.status}</span>
-                        </div>
-                        <div className="timelineMeta">
-                          <span>{formatDate(task.due_at, "bez terminu")}</span>
-                          <span>{task.external_project_id ?? "bez projektu"}</span>
-                        </div>
-                        {task.description ? <p className="listCardCopy">{task.description}</p> : null}
-                      </article>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-
-              {detail.analysis?.deadlines?.length ? (
-                <div className="calloutCard">
-                  <strong>Wykryte deadline'y</strong>
-                  <p>{detail.analysis.deadlines.map((deadline) => JSON.stringify(deadline)).join(" / ")}</p>
-                </div>
-              ) : null}
-
-              <div className="mailBody">
-                <pre>{detail.extracted_text}</pre>
-              </div>
-
-              {replyDraft ? (
-                <div className="calloutCard">
-                  <strong>Szkic odpowiedzi AI</strong>
-                  <p>{replyDraft}</p>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-        </section>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );
