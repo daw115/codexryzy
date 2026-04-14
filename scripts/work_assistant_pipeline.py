@@ -17,7 +17,7 @@ def env(name: str, default: str) -> str:
 WORK_ASSISTANT_API_URL = env("WORK_ASSISTANT_API_URL", "http://localhost:8080").rstrip("/")
 WORK_ASSISTANT_API_KEY = os.environ.get("WORK_ASSISTANT_API_KEY", "").strip()
 
-LLM_API_URL = env("LLM_API_URL", "https://api.quatarly.cloud/v0/chat/completions")
+LLM_API_URL = env("LLM_API_URL", "https://api.quatarly.cloud/v1/chat/completions")
 LLM_API_KEY = os.environ.get("LLM_API_KEY", "").strip()
 LLM_MODEL = env("LLM_MODEL", "claude-sonnet-4-6-20250929")
 
