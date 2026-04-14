@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-
 import { CerebroAIPanel } from "@/components/cerebro/ai-panel";
 import { EMPTY_FILTERS, CerebroFilters } from "@/components/cerebro/filters";
 import type { CerebroFiltersState } from "@/components/cerebro/filters";
@@ -9,10 +8,11 @@ import { CerebroMeetingDetail } from "@/components/cerebro/meeting-detail";
 import type { MeetingDetail } from "@/components/cerebro/meeting-detail";
 import { CerebroMeetingList } from "@/components/cerebro/meeting-list";
 import type { MeetingQueryItem, MeetingBulkSyncResponse, MeetingTaskRebuildResponse, TaskActionResponse } from "@/lib/types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { RefreshCw, Brain } from "lucide-react";
 
-type Props = {
-  initialMeetings: MeetingQueryItem[];
-};
+type Props = { initialMeetings: MeetingQueryItem[] };
 
 function buildQueryString(f: CerebroFiltersState, limit = 60): string {
   const p = new URLSearchParams({ limit: String(limit) });
@@ -41,30 +41,18 @@ export function CerebroWorkbench({ initialMeetings }: Props) {
   const [syncError, setSyncError] = useState<string | null>(null);
   const [bulkPending, setBulkPending] = useState(false);
 
-  // Derived filter options from current meeting list
-  const categoryOptions = Array.from(
-    new Set(meetings.map((m) => m.category).filter((c): c is string => Boolean(c))),
-  ).sort((a, b) => a.localeCompare(b, "pl"));
-
-  const projectOptions = Array.from(
-    new Set(meetings.map((m) => m.project).filter((p): p is string => Boolean(p))),
-  ).sort((a, b) => a.localeCompare(b, "pl"));
-
+  const categoryOptions = Array.from(new Set(meetings.map((m) => m.category).filter((c): c is string => Boolean(c)))).sort((a, b) => a.localeCompare(b, "pl"));
+  const projectOptions = Array.from(new Set(meetings.map((m) => m.project).filter((p): p is string => Boolean(p)))).sort((a, b) => a.localeCompare(b, "pl"));
   const selectedMeeting = meetings.find((m) => m.document_id === selectedId) ?? null;
 
-  // Fetch detail on-demand when selection changes
   useEffect(() => {
     if (!selectedId) { setDetail(null); return; }
     setDetail(null);
     setDetailLoading(true);
     setSyncMessage(null);
     setSyncError(null);
-
     fetch(`/api/cerebro/detail/${encodeURIComponent(selectedId)}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error(await res.text());
-        return res.json() as Promise<MeetingDetail>;
-      })
+      .then(async (res) => { if (!res.ok) throw new Error(await res.text()); return res.json() as Promise<MeetingDetail>; })
       .then(setDetail)
       .catch(() => setDetail(null))
       .finally(() => setDetailLoading(false));
@@ -102,8 +90,7 @@ export function CerebroWorkbench({ initialMeetings }: Props) {
       });
       if (!res.ok) throw new Error(await res.text());
       const data = (await res.json()) as MeetingTaskRebuildResponse;
-      setSyncMessage(`Sync zakończony: ${data.mirrored_tasks} tasków, ${data.vikunja_synced} w Vikunja.`);
-      // Reload detail to reflect new tasks
+      setSyncMessage(`Sync: ${data.mirrored_tasks} tasków, ${data.vikunja_synced} w Vikunja.`);
       const detailRes = await fetch(`/api/cerebro/detail/${encodeURIComponent(selectedId)}`);
       if (detailRes.ok) setDetail((await detailRes.json()) as MeetingDetail);
       await reloadList();
@@ -119,25 +106,15 @@ export function CerebroWorkbench({ initialMeetings }: Props) {
     setSyncMessage(null);
     setSyncError(null);
     try {
-      const res = await fetch(`/api/cerebro/tasks/${encodeURIComponent(taskId)}/complete`, {
-        method: "POST",
-      });
+      const res = await fetch(`/api/cerebro/tasks/${encodeURIComponent(taskId)}/complete`, { method: "POST" });
       if (!res.ok) throw new Error(await res.text());
       const data = (await res.json()) as TaskActionResponse;
       setSyncMessage(`Zadanie "${data.title}" → ${data.status}.`);
-      // Patch detail in-place
       setDetail((prev) =>
-        prev
-          ? {
-              ...prev,
-              tasks: prev.tasks.map((t) =>
-                t.external_task_id === taskId ? { ...t, status: data.status } : t,
-              ),
-            }
-          : prev,
+        prev ? { ...prev, tasks: prev.tasks.map((t) => t.external_task_id === taskId ? { ...t, status: data.status } : t) } : prev,
       );
     } catch (err) {
-      setSyncError(err instanceof Error ? err.message : "Nie udało się oznaczyć zadania.");
+      setSyncError(err instanceof Error ? err.message : "Nie udało się oznaczyć.");
     } finally {
       setTaskPendingId(null);
     }
@@ -165,84 +142,70 @@ export function CerebroWorkbench({ initialMeetings }: Props) {
   }
 
   return (
-    <div className="cerebroGrid">
-      {/* Column 1 — list + filters */}
-      <section className="sectionCard">
-        <div className="sectionHeader">
-          <div>
-            <span className="sectionEyebrow">Meeting intelligence</span>
-            <h2 className="sectionTitle">Backlog spotkań</h2>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* Column 1: List */}
+      <Card className="bg-card border-border flex flex-col">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-base">Backlog spotkań ({meetings.length})</CardTitle>
+            <div className="flex gap-1">
+              <Button size="sm" variant="ghost" onClick={() => void reloadList()} disabled={listLoading}>
+                <RefreshCw className={`h-3 w-3 ${listLoading ? "animate-spin" : ""}`} />
+              </Button>
+              <Button size="sm" variant="outline" onClick={bulkSync} disabled={bulkPending}>
+                {bulkPending ? "Sync..." : "Bulk sync"}
+              </Button>
+            </div>
           </div>
-          <div className="assistantActions">
-            <span className="sectionNote">{meetings.length} spotkań</span>
-            <button className="ghostButton" type="button" onClick={() => void reloadList()} disabled={listLoading}>
-              {listLoading ? "Odświeżam..." : "Odśwież"}
-            </button>
-            <button className="ghostButton" type="button" onClick={bulkSync} disabled={bulkPending}>
-              {bulkPending ? "Sync..." : "Bulk sync"}
-            </button>
-          </div>
-        </div>
-
-        <CerebroFilters
-          filters={filters}
-          categoryOptions={categoryOptions}
-          projectOptions={projectOptions}
-          loading={listLoading}
-          onChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
-          onApply={() => void reloadList()}
-          onReset={() => {
-            setFilters(EMPTY_FILTERS);
-            void reloadList(EMPTY_FILTERS);
-          }}
-        />
-
-        {listError && <p className="formError">{listError}</p>}
-        {syncError && <p className="formError">{syncError}</p>}
-        {syncMessage && <div className="calloutCard"><p>{syncMessage}</p></div>}
-
-        <div className="scrollPanel">
-          <CerebroMeetingList
-            meetings={meetings}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
+        </CardHeader>
+        <CardContent className="space-y-2 flex-1 overflow-y-auto max-h-[calc(100vh-18rem)]">
+          <CerebroFilters
+            filters={filters}
+            categoryOptions={categoryOptions}
+            projectOptions={projectOptions}
+            loading={listLoading}
+            onChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
+            onApply={() => void reloadList()}
+            onReset={() => { setFilters(EMPTY_FILTERS); void reloadList(EMPTY_FILTERS); }}
           />
-        </div>
-      </section>
+          {listError && <p className="text-sm text-destructive">{listError}</p>}
+          {syncError && <p className="text-sm text-destructive">{syncError}</p>}
+          {syncMessage && <div className="p-2 rounded-lg bg-success/5 border border-success/20 text-xs text-success">{syncMessage}</div>}
+          <CerebroMeetingList meetings={meetings} selectedId={selectedId} onSelect={setSelectedId} />
+        </CardContent>
+      </Card>
 
-      {/* Column 2 — detail */}
-      <section className="sectionCard sectionCardColumn">
-        <div className="sectionHeader">
-          <div>
-            <span className="sectionEyebrow">Actions &amp; deadlines</span>
-            <h2 className="sectionTitle">{selectedMeeting?.title ?? "Wybierz spotkanie"}</h2>
-          </div>
-          {selectedMeeting && (
-            <span className="sectionNote">{selectedMeeting.sync_status}</span>
-          )}
-        </div>
-        <CerebroMeetingDetail
-          detail={detail}
-          loading={detailLoading}
-          syncPending={syncPending}
-          taskPendingId={taskPendingId}
-          syncMessage={null}
-          syncError={null}
-          onRebuildTasks={rebuildTasks}
-          onCompleteTask={completeTask}
-        />
-      </section>
+      {/* Column 2: Detail */}
+      <Card className="bg-card border-border">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Brain className="h-4 w-4 text-accent" />
+            {selectedMeeting?.title ?? "Wybierz spotkanie"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CerebroMeetingDetail
+            detail={detail}
+            loading={detailLoading}
+            syncPending={syncPending}
+            taskPendingId={taskPendingId}
+            syncMessage={null}
+            syncError={null}
+            onRebuildTasks={rebuildTasks}
+            onCompleteTask={completeTask}
+          />
+        </CardContent>
+      </Card>
 
-      {/* Column 3 — AI */}
-      <section className="sectionCard sectionCardColumn">
-        <div className="sectionHeader">
-          <div>
-            <span className="sectionEyebrow">Cerebro AI</span>
-            <h2 className="sectionTitle">Pytania i plan pracy</h2>
-          </div>
-        </div>
-        <CerebroAIPanel selectedTitle={selectedMeeting?.title ?? null} />
-      </section>
+      {/* Column 3: AI */}
+      <Card className="bg-card border-border flex flex-col">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Cerebro AI</CardTitle>
+        </CardHeader>
+        <CardContent className="flex-1">
+          <CerebroAIPanel selectedTitle={selectedMeeting?.title ?? null} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { NavLink } from "@/components/nav-link";
 import {
   BellIcon,
@@ -15,6 +16,9 @@ import {
   TasksIcon,
 } from "@/components/icons";
 import { logoutAction } from "@/app/(protected)/actions";
+=======
+import { AppShell } from "@/components/app-shell";
+>>>>>>> origin/main
 import { getDashboardOverview, getQuatarlyCredits } from "@/lib/api";
 import { requireAuthenticatedUser } from "@/lib/auth";
 import { formatTokenCount } from "@/lib/format";
@@ -22,6 +26,10 @@ import { formatTokenCount } from "@/lib/format";
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   requireAuthenticatedUser();
   const [overview, credits] = await Promise.all([getDashboardOverview(), getQuatarlyCredits()]);
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
   const latestCoverageDay = overview.mail_coverage.latest_message_day ?? "brak";
   const creditsLabel = credits.available
     ? `${formatTokenCount(credits.remaining_credits)} cr`
@@ -30,6 +38,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
       : `${formatTokenCount(overview.llm_usage.today.total_tokens)} tk`;
 
   return (
+<<<<<<< HEAD
     <div className="pageShell">
       <div className="dashboardShell">
         <aside className="sidebar">
@@ -114,5 +123,14 @@ export default async function ProtectedLayout({ children }: { children: React.Re
         </main>
       </div>
     </div>
+=======
+    <AppShell
+      coveredDays={String(overview.mail_coverage.covered_days_count)}
+      creditsLabel={creditsLabel}
+      latestCoverageDay={latestCoverageDay}
+    >
+      {children}
+    </AppShell>
+>>>>>>> origin/main
   );
 }

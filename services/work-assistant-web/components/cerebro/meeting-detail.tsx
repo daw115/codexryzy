@@ -1,6 +1,9 @@
 "use client";
 
 import { formatDate } from "@/lib/format";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { RefreshCw, CheckCircle, Circle, Brain } from "lucide-react";
 
 export type MeetingActionItem = {
   title: string;
@@ -55,139 +58,117 @@ type Props = {
   onCompleteTask: (taskId: string) => void;
 };
 
-export function CerebroMeetingDetail({
-  detail,
-  loading,
-  syncPending,
-  taskPendingId,
-  syncMessage,
-  syncError,
-  onRebuildTasks,
-  onCompleteTask,
-}: Props) {
+export function CerebroMeetingDetail({ detail, loading, syncPending, taskPendingId, syncMessage, syncError, onRebuildTasks, onCompleteTask }: Props) {
   if (loading) {
-    return <div className="emptyState">Wczytuję szczegóły...</div>;
+    return <p className="text-sm text-muted-foreground text-center py-8">Wczytuję szczegóły...</p>;
   }
-
   if (!detail) {
-    return <div className="emptyState">Wybierz spotkanie z listy.</div>;
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+        <Brain className="h-10 w-10 opacity-20 mb-2" />
+        <p className="text-sm">Wybierz spotkanie z listy</p>
+      </div>
+    );
   }
 
   return (
-    <div className="readerPanel">
-      <div className="assistantActions">
-        <button
-          className="primaryButton"
-          type="button"
-          onClick={onRebuildTasks}
-          disabled={syncPending}
-        >
-          {syncPending ? "Synchronizuję..." : "Re-sync tasków"}
-        </button>
-      </div>
+    <div className="space-y-4 overflow-y-auto max-h-[calc(100vh-20rem)]">
+      <Button size="sm" onClick={onRebuildTasks} disabled={syncPending} variant="outline">
+        <RefreshCw className={`h-3 w-3 mr-1 ${syncPending ? "animate-spin" : ""}`} />
+        {syncPending ? "Synchronizuję..." : "Re-sync tasków"}
+      </Button>
 
-      {syncError && <p className="formError">{syncError}</p>}
-      {syncMessage && (
-        <div className="calloutCard">
-          <p>{syncMessage}</p>
+      {syncError && <p className="text-sm text-destructive">{syncError}</p>}
+      {syncMessage && <div className="p-3 rounded-lg bg-success/5 border border-success/20 text-sm text-success">{syncMessage}</div>}
+
+      {/* Summary */}
+      {detail.summary && (
+        <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
+          <p className="text-xs font-semibold text-primary mb-1">Streszczenie</p>
+          <p className="text-sm text-foreground/80">{detail.summary}</p>
         </div>
       )}
 
-      <div className="calloutCard">
-        <strong>Streszczenie</strong>
-        <p>{detail.summary ?? "Brak streszczenia."}</p>
-      </div>
-
       {/* Action items */}
-      <div className="sectionHeader">
-        <div>
-          <span className="sectionEyebrow">Action items</span>
-          <h3 className="sectionTitle sectionTitleSmall">
-            Do wykonania ({detail.action_items.length})
-          </h3>
-        </div>
-      </div>
-      <div className="signalList">
-        {detail.action_items.length > 0 ? (
-          detail.action_items.map((item, i) => (
-            <article className="listCard" key={i}>
-              <div className="listCardHeader">
-                <h4 className="listCardTitle">{item.title}</h4>
-                <span className="statusPill">{item.status ?? "open"}</span>
-              </div>
-              <div className="timelineMeta">
-                <span>{item.owner ?? "brak ownera"}</span>
-                <span>{formatDate(item.due_at, "bez terminu")}</span>
-              </div>
-              {item.description && <p className="listCardCopy">{item.description}</p>}
-            </article>
-          ))
+      <div>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+          Action Items ({detail.action_items.length})
+        </p>
+        {detail.action_items.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Brak action items</p>
         ) : (
-          <div className="emptyState">Brak action items.</div>
+          <div className="space-y-2">
+            {detail.action_items.map((item, i) => (
+              <div key={i} className="p-2.5 rounded-lg border border-border bg-card">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-medium">{item.title}</p>
+                  <Badge variant="secondary" className="text-xs shrink-0">{item.status ?? "open"}</Badge>
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {item.owner ?? "brak ownera"} · {formatDate(item.due_at, "bez terminu")}
+                </div>
+                {item.description && <p className="text-xs text-muted-foreground mt-1">{item.description}</p>}
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Linked tasks */}
-      <div className="sectionHeader">
-        <div>
-          <span className="sectionEyebrow">Vikunja</span>
-          <h3 className="sectionTitle sectionTitleSmall">
-            Zsynchronizowane taski ({detail.tasks.length})
-          </h3>
-        </div>
-      </div>
-      <div className="signalList">
-        {detail.tasks.length > 0 ? (
-          detail.tasks.map((task) => (
-            <article className="listCard" key={task.external_task_id}>
-              <div className="listCardHeader">
-                <h4 className="listCardTitle">{task.title}</h4>
-                <span className="statusPill">{task.status}</span>
-              </div>
-              <div className="timelineMeta">
-                <span>{formatDate(task.due_at, "bez terminu")}</span>
-                {task.external_project_id && <span>{task.external_project_id}</span>}
-              </div>
-              {task.description && <p className="listCardCopy">{task.description}</p>}
-              {!isDone(task.status) && (
-                <div className="assistantActions">
-                  <button
-                    className="ghostButton"
-                    type="button"
+      {/* Tasks */}
+      <div>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+          Vikunja Tasks ({detail.tasks.length})
+        </p>
+        {detail.tasks.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Brak zlinkowanych tasków</p>
+        ) : (
+          <div className="space-y-2">
+            {detail.tasks.map((task) => (
+              <div key={task.external_task_id} className="p-2.5 rounded-lg border border-border bg-card">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-medium">{task.title}</p>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {isDone(task.status)
+                      ? <CheckCircle className="h-4 w-4 text-success" />
+                      : <Circle className="h-4 w-4 text-muted-foreground" />}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {formatDate(task.due_at, "bez terminu")}
+                  {task.external_project_id && ` · ${task.external_project_id}`}
+                </p>
+                {!isDone(task.status) && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 text-xs mt-1 px-2"
                     onClick={() => onCompleteTask(task.external_task_id)}
                     disabled={taskPendingId === task.external_task_id}
                   >
                     {taskPendingId === task.external_task_id ? "Aktualizuję..." : "Oznacz done"}
-                  </button>
-                </div>
-              )}
-            </article>
-          ))
-        ) : (
-          <div className="emptyState">Brak zlinkowanych tasków.</div>
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
       {/* Deadlines */}
       {detail.deadlines.length > 0 && (
-        <>
-          <div className="sectionHeader">
-            <div>
-              <span className="sectionEyebrow">Terminy</span>
-              <h3 className="sectionTitle sectionTitleSmall">Deadlines ({detail.deadlines.length})</h3>
-            </div>
-          </div>
-          <div className="signalList">
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+            Deadlines ({detail.deadlines.length})
+          </p>
+          <div className="space-y-1.5">
             {detail.deadlines.map((d, i) => (
-              <article className="listCard" key={i}>
-                <div className="listCardHeader">
-                  <h4 className="listCardTitle">{d.label}</h4>
-                  <span className="priorityPill">{formatDate(d.date, "brak daty")}</span>
-                </div>
-              </article>
+              <div key={i} className="flex items-center justify-between p-2 rounded border border-border text-sm">
+                <span>{d.label}</span>
+                <Badge variant="outline" className="text-xs">{formatDate(d.date, "brak daty")}</Badge>
+              </div>
             ))}
           </div>
-        </>
+        </div>
       )}
     </div>
   );

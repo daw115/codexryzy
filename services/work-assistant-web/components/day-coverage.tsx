@@ -1,5 +1,6 @@
 import { formatDay } from "@/lib/format";
 import type { MailCoverageDay } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 type DayCoverageProps = {
   days: MailCoverageDay[];
@@ -7,25 +8,25 @@ type DayCoverageProps = {
 
 export function DayCoverage({ days }: DayCoverageProps) {
   if (!days.length) {
-    return <div className="emptyState">Brak pokrycia dni do pokazania.</div>;
+    return <p className="text-sm text-muted-foreground text-center py-4">Brak pokrycia dni do pokazania</p>;
   }
 
-  const maxCount = Math.max(...days.map((entry) => entry.count), 1);
+  const maxCount = Math.max(...days.map((d) => d.count), 1);
 
   return (
-    <div className="coverageGrid">
+    <div className="flex flex-wrap gap-1">
       {days.map((entry) => {
-        const level = Math.max(0.22, entry.count / maxCount);
+        const intensity = Math.max(0.15, entry.count / maxCount);
         return (
-          <article
+          <div
             key={entry.day}
-            className="coverageTile"
-            style={{ ["--level" as never]: `${level}` }}
+            className="flex flex-col items-center gap-0.5 p-1.5 rounded border border-border text-center min-w-[3rem] cursor-default"
             title={`${entry.day}: ${entry.count} maili`}
+            style={{ backgroundColor: `hsl(230 80% 60% / ${intensity})` }}
           >
-            <span className="coverageDay">{formatDay(entry.day, entry.day)}</span>
-            <strong className="coverageCount">{entry.count}</strong>
-          </article>
+            <span className="text-[10px] text-foreground/60">{formatDay(entry.day, entry.day)}</span>
+            <strong className="text-xs font-semibold">{entry.count}</strong>
+          </div>
         );
       })}
     </div>
