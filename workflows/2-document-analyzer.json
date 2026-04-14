@@ -1,0 +1,146 @@
+{
+  "name": "2 - Document Analyzer",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "document-analyzer",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "b1b2c3d4-0002-0002-0002-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "document-analyzer"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst fileUrl = input.body?.fileUrl;\n\nif (!fileUrl) {\n  throw new Error('fileUrl is required');\n}\n\nlet parsed;\ntry {\n  parsed = new URL(fileUrl);\n} catch (error) {\n  throw new Error('fileUrl must be a valid URL');\n}\n\nif (!['http:', 'https:'].includes(parsed.protocol)) {\n  throw new Error('fileUrl must use http or https');\n}\n\nconst host = parsed.hostname.toLowerCase();\nif (host === 'localhost' || host === '0.0.0.0' || host === '::1' || host.endsWith('.local')) {\n  throw new Error('Local hostnames are not allowed');\n}\n\nif (host.includes(':')) {\n  throw new Error('IPv6 literal hosts are not allowed');\n}\n\nif (/^\\d+\\.\\d+\\.\\d+\\.\\d+$/.test(host)) {\n  const [a, b] = host.split('.').map(Number);\n  const privateRange =\n    a === 10 ||\n    a === 127 ||\n    (a === 169 && b === 254) ||\n    (a === 172 && b >= 16 && b <= 31) ||\n    (a === 192 && b === 168) ||\n    (a === 100 && b >= 64 && b <= 127) ||\n    (a === 198 && (b === 18 || b === 19));\n\n  if (privateRange) {\n    throw new Error('Private IP ranges are not allowed');\n  }\n}\n\nreturn [{ json: { ...input, validatedFileUrl: parsed.toString() } }];"
+      },
+      "id": "b1b2c3d4-0002-0002-0002-000000000005",
+      "name": "Validate File URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.validatedFileUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "b1b2c3d4-0002-0002-0002-000000000002",
+      "name": "Fetch Document",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.quatarly.cloud/v0/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({model:'claude-sonnet-4-6-20250929',max_tokens:2048,messages:[{role:'system',content:'You are a document analysis expert. Analyze the provided document and return a structured JSON response with: { summary: string, key_points: string[], action_items: string[], sentiment: string, topics: string[] }'},{role:'user',content:'Analyze this document:\\n\\n'+($json.data||$json.body)}],stream:false}) }}",
+        "options": {}
+      },
+      "id": "b1b2c3d4-0002-0002-0002-000000000003",
+      "name": "Claude - Analyze Document",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [960, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1",
+          "name": "Quatarly API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { analysis: $json.choices[0].message.content, model: $json.model, file_url: $('Webhook').item.json.body.fileUrl } }}",
+        "options": {}
+      },
+      "id": "b1b2c3d4-0002-0002-0002-000000000004",
+      "name": "Return Analysis",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1200, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate File URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate File URL": {
+      "main": [
+        [
+          {
+            "node": "Fetch Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Document": {
+      "main": [
+        [
+          {
+            "node": "Claude - Analyze Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude - Analyze Document": {
+      "main": [
+        [
+          {
+            "node": "Return Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    { "name": "librechat-integration" },
+    { "name": "documents" }
+  ],
+  "pinData": {}
+}
