@@ -2,6 +2,7 @@ import "server-only";
 
 import type {
   AssistantQueryResponse,
+  BriefingResponse,
   DashboardOverviewResponse,
   DocumentDetailResponse,
   DocumentQueryResponse,
@@ -239,5 +240,23 @@ export async function getUpcomingTasks(daysAhead = 7, limit = 20): Promise<TaskL
       due_before: boundary.toISOString(),
       limit,
     }),
+  });
+}
+
+export async function getTodayBriefing(): Promise<BriefingResponse | null> {
+  try {
+    return await apiFetch<BriefingResponse>("/v1/briefing/today");
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("404")) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+export async function generateTodayBriefing(force = true): Promise<BriefingResponse> {
+  return apiFetch<BriefingResponse>("/v1/briefing/generate", {
+    method: "POST",
+    body: JSON.stringify({ force }),
   });
 }

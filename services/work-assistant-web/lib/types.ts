@@ -328,3 +328,10 @@ export type CerebroMeetingDigest = {
     status: string;
   }>;
 };
+
+export type BriefingResponse = {
+  briefing_id: string;
+  briefing_date: string;
+  content: string;
+  generated_at: string;
+};
