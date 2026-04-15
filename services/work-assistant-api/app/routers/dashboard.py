@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, Request
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
 from psycopg_pool import AsyncConnectionPool
 
@@ -34,6 +36,138 @@ async def dashboard_overview(
         mail_coverage=coverage,
         llm_usage=llm,
     )
+
+
+
+
+@router.get(
+    "/v1/dashboard/weekly-summary",
+    dependencies=[Depends(require_api_key)],
+)
+async def weekly_summary(
+    week: str = Query(..., description="Week in format YYYY-Www (e.g., 2026-W15)"),
+    db_pool: AsyncConnectionPool = Depends(get_db_pool),
+):
+    """Get weekly summary with tasks, emails, and insights."""
+    try:
+        # Parse week string (format: 2026-W15)
+        year, week_num = week.split("-W")
+        year = int(year)
+        week_num = int(week_num)
+
+        # Calculate date range for the week
+        jan_4 = datetime(year, 1, 4)
+        week_start = jan_4 - timedelta(days=jan_4.weekday()) + timedelta(weeks=week_num - 1)
+        week_end = week_start + timedelta(days=6)
+
+        async with db_pool.connection() as conn:
+            # Get tasks due this week
+            tasks_result = await conn.execute(
+                """
+                SELECT
+                    t.id, t.external_task_id, t.title, t.description,
+                    t.due_at, t.priority, t.status, t.metadata,
+                    t.created_at, t.updated_at
+                FROM tasks_mirror t
+                WHERE t.status = 'open'
+                  AND t.due_at BETWEEN $1 AND $2
+                ORDER BY t.priority, t.due_at
+                """,
+                [week_start, week_end + timedelta(days=1)],
+            )
+            tasks_due = [dict(row) for row in await tasks_result.fetchall()]
+
+            # Get high priority tasks
+            high_priority_count = sum(1 for t in tasks_due if t["priority"] == 1)
+
+            # Get urgent tasks (next 48h)
+            now = datetime.now()
+            urgent_deadline = now + timedelta(hours=48)
+            urgent_tasks = [
+                t for t in tasks_due
+                if t["due_at"] and t["due_at"] <= urgent_deadline
+            ]
+
+            # Get emails analyzed this week
+            emails_result = await conn.execute(
+                """
+                SELECT COUNT(*) as count
+                FROM documents d
+                WHERE d.source_type = 'google_drive_mail'
+                  AND d.created_at BETWEEN $1 AND $2
+                """,
+                [week_start, week_end + timedelta(days=1)],
+            )
+            emails_analyzed = (await emails_result.fetchone())[0]
+
+            # Get active projects
+            projects_result = await conn.execute(
+                """
+                SELECT COUNT(DISTINCT t.metadata->>'project') as count
+                FROM tasks_mirror t
+                WHERE t.updated_at BETWEEN $1 AND $2
+                  AND t.metadata->>'project' IS NOT NULL
+                """,
+                [week_start, week_end + timedelta(days=1)],
+            )
+            active_projects = (await projects_result.fetchone())[0]
+
+            # Get urgent deadlines
+            urgent_deadlines = sum(
+                1 for t in tasks_due
+                if t["priority"] == 1 and t["due_at"]
+            )
+
+            # Get next week preview
+            next_week_start = week_end + timedelta(days=1)
+            next_week_end = next_week_start + timedelta(days=7)
+            next_week_result = await conn.execute(
+                """
+                SELECT
+                    t.id, t.external_task_id, t.title, t.description,
+                    t.due_at, t.priority, t.status, t.metadata,
+                    t.created_at, t.updated_at
+                FROM tasks_mirror t
+                WHERE t.status = 'open'
+                  AND t.due_at BETWEEN $1 AND $2
+                ORDER BY t.priority, t.due_at
+                LIMIT 5
+                """,
+                [next_week_start, next_week_end],
+            )
+            next_week_preview = [dict(row) for row in await next_week_result.fetchall()]
+
+            # Generate insights
+            insights = []
+            if emails_analyzed > 0:
+                insights.append(f"📧 {emails_analyzed} new emails analyzed this week")
+            if high_priority_count > 0:
+                insights.append(f"⚠️ {high_priority_count} high priority tasks require attention")
+            if active_projects > 0:
+                insights.append(f"📊 {active_projects} projects with activity this week")
+
+            return {
+                "week": week,
+                "date_range": {
+                    "start": week_start.strftime("%Y-%m-%d"),
+                    "end": week_end.strftime("%Y-%m-%d"),
+                },
+                "stats": {
+                    "tasks_due": len(tasks_due),
+                    "tasks_high_priority": high_priority_count,
+                    "emails_analyzed": emails_analyzed,
+                    "active_projects": active_projects,
+                    "urgent_deadlines": urgent_deadlines,
+                },
+                "urgent_tasks": urgent_tasks,
+                "next_week_preview": next_week_preview,
+                "insights": insights,
+            }
+
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid week format. Use YYYY-Www (e.g., 2026-W15)")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
