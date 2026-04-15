@@ -36,6 +36,13 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# Runtime environment variables - these will be passed from Railway at runtime
+# They are needed for server-side API calls in Next.js
+ARG WORK_ASSISTANT_API_URL
+ARG WORK_ASSISTANT_API_KEY
+ENV WORK_ASSISTANT_API_URL=$WORK_ASSISTANT_API_URL
+ENV WORK_ASSISTANT_API_KEY=$WORK_ASSISTANT_API_KEY
+
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
