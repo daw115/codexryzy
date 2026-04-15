@@ -98,7 +98,7 @@ async def weekly_summary(
                 """,
                 [week_start, week_end + timedelta(days=1)],
             )
-            emails_analyzed = (await emails_result.fetchone())[0]
+            emails_analyzed = (await emails_result.fetchone())['count']
 
             # Get active projects
             projects_result = await conn.execute(
@@ -110,7 +110,7 @@ async def weekly_summary(
                 """,
                 [week_start, week_end + timedelta(days=1)],
             )
-            active_projects = (await projects_result.fetchone())[0]
+            active_projects = (await projects_result.fetchone())['count']
 
             # Get urgent deadlines
             urgent_deadlines = sum(
