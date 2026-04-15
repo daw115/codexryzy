@@ -17,14 +17,14 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build-time arguments for NEXT_PUBLIC_* variables
+# Build-time arguments for environment variables
 # These will be automatically passed from Railway environment variables
-ARG NEXT_PUBLIC_API_URL
-ARG NEXT_PUBLIC_API_KEY
+ARG WORK_ASSISTANT_API_URL
+ARG WORK_ASSISTANT_API_KEY
 
 # Set as environment variables for the build process
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_KEY=$NEXT_PUBLIC_API_KEY
+ENV WORK_ASSISTANT_API_URL=$WORK_ASSISTANT_API_URL
+ENV WORK_ASSISTANT_API_KEY=$WORK_ASSISTANT_API_KEY
 
 # Build Next.js application
 # This will embed the NEXT_PUBLIC_* variables into the JavaScript bundle
