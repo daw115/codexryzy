@@ -1,8 +1,0 @@
-MONGODB_URI=mongodb://mongo:27017/librechat
-OPENAI_API_KEY=qua-3fe84831eb5df3856a4790c2461ae1bf
-OPENAI_BASE_URL=https://api.quatarly.cloud/v1
-CREDS_KEY=474c29dc4591bd2fd0a1b806db695e75694cb26657a10688182d5a5aa2df9814
-CREDS_IV=ad338101a037d178b886c5c6fb64d7c1
-N8N_USER=n8n
-N8N_PASSWORD=changeme
-TZ=Europe/Warsaw
