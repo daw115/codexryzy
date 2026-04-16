@@ -19,6 +19,7 @@ import {
   Sun,
   Moon,
   Bell,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,8 @@ const mainItems = [
 const workItems = [
   { title: "Zadania", url: "/tasks", icon: CheckSquare },
   { title: "Kalendarz", url: "/schedule", icon: Calendar },
+  { title: "Raporty dzienne", url: "/daily-reports", icon: FileText },
+  { title: "Raporty tygodniowe", url: "/reports", icon: FileText },
 ];
 
 const systemItems = [
