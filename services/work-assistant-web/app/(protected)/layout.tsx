@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { formatTokenCount } from "@/lib/format";
 
+// Disable static generation for all protected routes
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<{
