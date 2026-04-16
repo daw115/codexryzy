@@ -70,7 +70,7 @@ async def weekly_summary(
                     t.created_at, t.updated_at
                 FROM tasks_mirror t
                 WHERE t.status = 'open'
-                  AND t.due_at BETWEEN $1 AND $2
+                  AND t.due_at BETWEEN %s AND %s
                 ORDER BY t.priority, t.due_at
                 """,
                 [week_start, week_end + timedelta(days=1)],
@@ -94,7 +94,7 @@ async def weekly_summary(
                 SELECT COUNT(*) as count
                 FROM documents d
                 WHERE d.source_type = 'google_drive_mail'
-                  AND d.created_at BETWEEN $1 AND $2
+                  AND d.created_at BETWEEN %s AND %s
                 """,
                 [week_start, week_end + timedelta(days=1)],
             )
@@ -105,7 +105,7 @@ async def weekly_summary(
                 """
                 SELECT COUNT(DISTINCT t.metadata->>'project') as count
                 FROM tasks_mirror t
-                WHERE t.updated_at BETWEEN $1 AND $2
+                WHERE t.updated_at BETWEEN %s AND %s
                   AND t.metadata->>'project' IS NOT NULL
                 """,
                 [week_start, week_end + timedelta(days=1)],
@@ -129,7 +129,7 @@ async def weekly_summary(
                     t.created_at, t.updated_at
                 FROM tasks_mirror t
                 WHERE t.status = 'open'
-                  AND t.due_at BETWEEN $1 AND $2
+                  AND t.due_at BETWEEN %s AND %s
                 ORDER BY t.priority, t.due_at
                 LIMIT 5
                 """,
