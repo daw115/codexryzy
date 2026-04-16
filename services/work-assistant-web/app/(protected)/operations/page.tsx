@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Settings, Activity, CheckCircle, AlertTriangle, ExternalLink } from "lucide-react";
 
-export const dynamic = "force-dynamic";
 
 export default async function OperationsPage() {
   const [overview, credits] = await Promise.all([getDashboardOverview(), getQuatarlyCredits()]);

@@ -6,7 +6,6 @@ export const revalidate = 0;
 import { getCerebroMeetings } from "@/lib/cerebro";
 import { Brain } from "lucide-react";
 
-export const dynamic = "force-dynamic";
 
 export default async function CerebroPage() {
   const meetings = await getCerebroMeetings({ limit: 30 });

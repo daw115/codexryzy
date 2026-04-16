@@ -11,7 +11,6 @@ import { Progress } from "@/components/ui/progress";
 import { Database, AlertCircle, CheckCircle } from "lucide-react";
 import type { MailCoverageDay } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
 
 type CoverageGap = { from: string; to: string; days: number };
 

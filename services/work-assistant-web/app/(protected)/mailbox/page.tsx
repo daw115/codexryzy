@@ -7,7 +7,6 @@ import { queryDocuments } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Mail } from "lucide-react";
 
-export const dynamic = "force-dynamic";
 
 export default async function MailboxPage() {
   const documents = await queryDocuments({
