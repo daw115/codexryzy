@@ -1,4 +1,8 @@
 import { MeetingIntake } from "@/components/meeting-intake";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { queryMeetings } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

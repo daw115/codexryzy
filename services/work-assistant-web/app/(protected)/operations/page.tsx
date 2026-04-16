@@ -1,4 +1,8 @@
 import { getDashboardOverview, getQuatarlyCredits } from "@/lib/api";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { formatTokenCount } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

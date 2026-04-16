@@ -1,4 +1,8 @@
 import { CerebroWorkbench } from "@/components/cerebro-workbench";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { getCerebroMeetings } from "@/lib/cerebro";
 import { Brain } from "lucide-react";
 

@@ -1,4 +1,8 @@
 import { DayCoverage } from "@/components/day-coverage";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { getDashboardOverview } from "@/lib/api";
 import { formatDay, formatTokenCount } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

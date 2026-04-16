@@ -1,4 +1,8 @@
 import { MailWorkbench } from "@/components/mail-workbench";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { queryDocuments } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Mail } from "lucide-react";
