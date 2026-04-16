@@ -93,7 +93,8 @@ async def weekly_summary(
                 """
                 SELECT COUNT(*) as count
                 FROM documents d
-                WHERE d.source_type = 'google_drive_mail'
+                JOIN sources s ON s.id = d.source_id
+                WHERE s.source_type = 'google_drive_mail'
                   AND d.created_at BETWEEN %s AND %s
                 """,
                 [week_start, week_end + timedelta(days=1)],
