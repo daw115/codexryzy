@@ -1,116 +1,70 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
 
-@layer base {
-  :root {
-    --background: 220 20% 97%;
-    --foreground: 220 25% 10%;
+@theme {
+  --color-background: 220 20% 97%;
+  --color-foreground: 220 25% 10%;
+  --color-card: 0 0% 100%;
+  --color-card-foreground: 220 25% 10%;
+  --color-popover: 0 0% 100%;
+  --color-popover-foreground: 220 25% 10%;
+  --color-primary: 230 80% 56%;
+  --color-primary-foreground: 0 0% 100%;
+  --color-secondary: 220 15% 92%;
+  --color-secondary-foreground: 220 25% 10%;
+  --color-muted: 220 15% 95%;
+  --color-muted-foreground: 220 10% 46%;
+  --color-accent: 260 60% 58%;
+  --color-accent-foreground: 0 0% 100%;
+  --color-destructive: 0 72% 51%;
+  --color-destructive-foreground: 0 0% 100%;
+  --color-border: 220 15% 90%;
+  --color-input: 220 15% 90%;
+  --color-ring: 230 80% 56%;
+  --color-success: 142 70% 45%;
+  --color-success-foreground: 0 0% 100%;
+  --color-warning: 38 92% 50%;
+  --color-warning-foreground: 0 0% 100%;
+  --color-info: 200 80% 50%;
+  --color-info-foreground: 0 0% 100%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 25% 10%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 10%;
-
-    --primary: 230 80% 56%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 220 15% 92%;
-    --secondary-foreground: 220 25% 10%;
-
-    --muted: 220 15% 95%;
-    --muted-foreground: 220 10% 46%;
-
-    --accent: 260 60% 58%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 220 15% 90%;
-    --input: 220 15% 90%;
-    --ring: 230 80% 56%;
-
-    --radius: 0.75rem;
-
-    --sidebar-background: 225 25% 12%;
-    --sidebar-foreground: 220 15% 80%;
-    --sidebar-primary: 230 80% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 225 20% 18%;
-    --sidebar-accent-foreground: 220 15% 92%;
-    --sidebar-border: 225 20% 20%;
-    --sidebar-ring: 230 80% 56%;
-
-    --success: 142 70% 45%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --info: 200 80% 50%;
-    --info-foreground: 0 0% 100%;
-  }
-
-  .dark {
-    --background: 225 25% 8%;
-    --foreground: 220 15% 92%;
-
-    --card: 225 22% 11%;
-    --card-foreground: 220 15% 92%;
-
-    --popover: 225 22% 11%;
-    --popover-foreground: 220 15% 92%;
-
-    --primary: 230 80% 60%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 225 20% 18%;
-    --secondary-foreground: 220 15% 92%;
-
-    --muted: 225 20% 15%;
-    --muted-foreground: 220 10% 55%;
-
-    --accent: 260 60% 62%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 62% 45%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 225 18% 18%;
-    --input: 225 18% 18%;
-    --ring: 230 80% 60%;
-
-    --sidebar-background: 225 28% 7%;
-    --sidebar-foreground: 220 15% 75%;
-    --sidebar-primary: 230 80% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 225 22% 12%;
-    --sidebar-accent-foreground: 220 15% 92%;
-    --sidebar-border: 225 22% 14%;
-    --sidebar-ring: 230 80% 56%;
-
-    --success: 142 70% 45%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --info: 200 80% 50%;
-    --info-foreground: 0 0% 100%;
-  }
+  --radius-lg: 0.75rem;
+  --radius-md: calc(0.75rem - 2px);
+  --radius-sm: calc(0.75rem - 4px);
 }
 
-@layer base {
-  * {
-    border-color: hsl(var(--border));
-  }
+* {
+  border-color: hsl(var(--color-border));
+}
 
-  body {
-    @apply bg-background text-foreground;
-    font-family: 'Inter', system-ui, sans-serif;
-  }
+body {
+  background-color: hsl(var(--color-background));
+  color: hsl(var(--color-foreground));
+  font-family: 'Inter', system-ui, sans-serif;
+}
 
-  code, pre {
-    font-family: 'JetBrains Mono', monospace;
-  }
+code, pre {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.dark {
+  --color-background: 225 25% 8%;
+  --color-foreground: 220 15% 92%;
+  --color-card: 225 22% 11%;
+  --color-card-foreground: 220 15% 92%;
+  --color-popover: 225 22% 11%;
+  --color-popover-foreground: 220 15% 92%;
+  --color-primary: 230 80% 60%;
+  --color-primary-foreground: 0 0% 100%;
+  --color-secondary: 225 20% 18%;
+  --color-secondary-foreground: 220 15% 92%;
+  --color-muted: 225 20% 15%;
+  --color-muted-foreground: 220 10% 55%;
+  --color-accent: 260 60% 62%;
+  --color-accent-foreground: 0 0% 100%;
+  --color-destructive: 0 62% 45%;
+  --color-destructive-foreground: 0 0% 100%;
+  --color-border: 225 18% 18%;
+  --color-input: 225 18% 18%;
+  --color-ring: 230 80% 60%;
 }
