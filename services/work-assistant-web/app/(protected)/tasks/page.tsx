@@ -1,7 +1,5 @@
 import { TaskAdvisor } from "@/components/task-advisor";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 import { getTaskSchedule } from "@/lib/api";
 import { formatDate, priorityLabel } from "@/lib/format";
