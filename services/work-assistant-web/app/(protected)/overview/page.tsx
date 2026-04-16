@@ -1,6 +1,8 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getDashboardOverview, getOpenTasks, getQuatarlyCredits, queryDocuments, queryMeetings } from "@/lib/api";
 import { formatDay, formatTokenCount, relativeCoverageLabel } from "@/lib/format";
 import {
   FileText,
@@ -13,8 +15,13 @@ import {
   Database,
   BarChart3,
 } from "lucide-react";
-
-export const dynamic = "force-dynamic";
+import type {
+  DashboardOverviewResponse,
+  TaskListResponse,
+  DocumentQueryResponse,
+  MeetingQueryResponse,
+  QuatarlyCreditsResponse,
+} from "@/lib/types";
 
 function KpiCard({
   title,
@@ -47,14 +54,82 @@ function KpiCard({
   );
 }
 
-export default async function OverviewPage() {
-  const [overview, openTasks, recentEmails, recentMeetings, credits] = await Promise.all([
-    getDashboardOverview(),
-    getOpenTasks(8),
-    queryDocuments({ artifact_type: "email", limit: 6 }),
-    queryMeetings({ limit: 4 }),
-    getQuatarlyCredits(),
-  ]);
+export default function OverviewPage() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<{
+    overview: DashboardOverviewResponse | null;
+    openTasks: TaskListResponse | null;
+    recentEmails: DocumentQueryResponse | null;
+    recentMeetings: MeetingQueryResponse | null;
+    credits: QuatarlyCreditsResponse | null;
+  }>({
+    overview: null,
+    openTasks: null,
+    recentEmails: null,
+    recentMeetings: null,
+    credits: null,
+  });
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_WORK_ASSISTANT_API_URL;
+        const apiKey = process.env.NEXT_PUBLIC_WORK_ASSISTANT_API_KEY;
+
+        if (!apiUrl || !apiKey) {
+          throw new Error("API configuration missing");
+        }
+
+        const headers = {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey,
+        };
+
+        const [overview, openTasks, recentEmails, recentMeetings, credits] = await Promise.all([
+          fetch(`${apiUrl}/v1/dashboard/overview`, { headers }).then(r => r.json()),
+          fetch(`${apiUrl}/v1/tasks/query`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ statuses: ["open"], limit: 8 }),
+          }).then(r => r.json()),
+          fetch(`${apiUrl}/v1/documents/query`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ artifact_type: "email", limit: 6 }),
+          }).then(r => r.json()),
+          fetch(`${apiUrl}/v1/meetings/query?limit=4`, { headers }).then(r => r.json()),
+          fetch(`${apiUrl}/v1/credits/quatarly`, { headers }).then(r => r.json()),
+        ]);
+
+        setData({ overview, openTasks, recentEmails, recentMeetings, credits });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load data");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error || !data.overview || !data.openTasks || !data.recentEmails || !data.recentMeetings || !data.credits) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg text-red-500">Error loading dashboard. Please check API connection.</div>
+      </div>
+    );
+  }
+
+  const { overview, openTasks, recentEmails, recentMeetings, credits } = data;
 
   const undatedRatio = relativeCoverageLabel(
     overview.mail_coverage.undated_email_documents,
