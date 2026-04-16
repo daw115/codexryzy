@@ -171,6 +171,149 @@ async def weekly_summary(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get(
+    "/v1/dashboard/daily-report",
+    dependencies=[Depends(require_api_key)],
+)
+async def daily_report(
+    date: str = Query(..., description="Date in format YYYY-MM-DD (e.g., 2026-04-15)"),
+    db_pool: AsyncConnectionPool = Depends(get_db_pool),
+):
+    """Get daily report with emails, tasks, and upcoming items."""
+    try:
+        # Parse date string
+        report_date = datetime.strptime(date, "%Y-%m-%d").date()
+        day_start = datetime.combine(report_date, datetime.min.time())
+        day_end = datetime.combine(report_date, datetime.max.time())
+
+        async with db_pool.connection() as conn:
+            # Get emails for this day
+            emails_result = await conn.execute(
+                """
+                SELECT
+                    d.id, d.title, d.summary, d.category,
+                    d.metadata->>'message_day' as message_day,
+                    d.created_at
+                FROM documents d
+                JOIN sources s ON s.id = d.source_id
+                WHERE s.source_type = 'google_drive_mail'
+                  AND d.metadata->>'message_day' = %s
+                ORDER BY d.created_at DESC
+                LIMIT 50
+                """,
+                [date],
+            )
+            emails = [dict(row) for row in await emails_result.fetchall()]
+
+            # Count emails by category
+            emails_by_category = {}
+            for email in emails:
+                cat = email.get("category") or "uncategorized"
+                emails_by_category[cat] = emails_by_category.get(cat, 0) + 1
+
+            # Get tasks completed today
+            completed_result = await conn.execute(
+                """
+                SELECT
+                    t.id, t.external_task_id, t.title, t.priority
+                FROM tasks_mirror t
+                WHERE t.status = 'done'
+                  AND t.updated_at BETWEEN %s AND %s
+                ORDER BY t.updated_at DESC
+                LIMIT 20
+                """,
+                [day_start, day_end],
+            )
+            tasks_completed = [dict(row) for row in await completed_result.fetchall()]
+
+            # Get tasks in progress
+            in_progress_result = await conn.execute(
+                """
+                SELECT
+                    t.id, t.external_task_id, t.title, t.priority, t.due_at
+                FROM tasks_mirror t
+                WHERE t.status = 'open'
+                  AND t.updated_at BETWEEN %s AND %s
+                ORDER BY t.priority, t.due_at
+                LIMIT 20
+                """,
+                [day_start, day_end],
+            )
+            tasks_in_progress = [dict(row) for row in await in_progress_result.fetchall()]
+
+            # Get overdue tasks
+            overdue_result = await conn.execute(
+                """
+                SELECT
+                    t.id, t.external_task_id, t.title, t.priority, t.due_at
+                FROM tasks_mirror t
+                WHERE t.status = 'open'
+                  AND t.due_at < %s
+                ORDER BY t.due_at
+                LIMIT 10
+                """,
+                [day_start],
+            )
+            tasks_overdue = [dict(row) for row in await overdue_result.fetchall()]
+
+            # Get upcoming tasks (next 3 days)
+            next_3_days = day_end + timedelta(days=3)
+            upcoming_result = await conn.execute(
+                """
+                SELECT
+                    t.id, t.external_task_id, t.title, t.priority, t.due_at
+                FROM tasks_mirror t
+                WHERE t.status = 'open'
+                  AND t.due_at BETWEEN %s AND %s
+                ORDER BY t.due_at, t.priority
+                LIMIT 15
+                """,
+                [day_end, next_3_days],
+            )
+            upcoming_next_3_days = [dict(row) for row in await upcoming_result.fetchall()]
+
+            # Get important deadlines (next 7 days, high priority)
+            next_7_days = day_end + timedelta(days=7)
+            deadlines_result = await conn.execute(
+                """
+                SELECT
+                    t.id, t.external_task_id, t.title, t.priority, t.due_at
+                FROM tasks_mirror t
+                WHERE t.status = 'open'
+                  AND t.due_at BETWEEN %s AND %s
+                  AND t.priority IN (1, 2)
+                ORDER BY t.due_at, t.priority
+                LIMIT 10
+                """,
+                [day_end, next_7_days],
+            )
+            upcoming_deadlines = [dict(row) for row in await deadlines_result.fetchall()]
+
+            return {
+                "date": date,
+                "day_of_week": report_date.strftime("%A"),
+                "emails": {
+                    "total": len(emails),
+                    "by_category": emails_by_category,
+                    "highlights": emails[:10],  # Top 10 emails
+                },
+                "tasks": {
+                    "completed": tasks_completed,
+                    "in_progress": tasks_in_progress,
+                    "overdue": tasks_overdue,
+                },
+                "upcoming": {
+                    "next_3_days": upcoming_next_3_days,
+                    "next_7_days_deadlines": upcoming_deadlines,
+                },
+            }
+
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD (e.g., 2026-04-15)")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request) -> HTMLResponse:
     """Serve the SPA dashboard shell. Auth is handled client-side via localStorage API key."""
