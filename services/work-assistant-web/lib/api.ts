@@ -30,22 +30,33 @@ function getApiConfig() {
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const { baseUrl, apiKey } = getApiConfig();
-  const response = await fetch(`${baseUrl}${path}`, {
-    ...init,
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      "X-API-Key": apiKey,
-      ...(init?.headers ?? {}),
-    },
-  });
 
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`${response.status} ${response.statusText}: ${body}`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const response = await fetch(`${baseUrl}${path}`, {
+      ...init,
+      signal: controller.signal,
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-Key": apiKey,
+        ...(init?.headers ?? {}),
+      },
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`${response.status} ${response.statusText}: ${body}`);
+    }
+
+    return (await response.json()) as T;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
   }
-
-  return (await response.json()) as T;
 }
 
 export async function getDashboardOverview(): Promise<DashboardOverviewResponse> {
