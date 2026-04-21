@@ -191,7 +191,7 @@ async def daily_report(
             emails_result = await conn.execute(
                 """
                 SELECT
-                    d.id, d.title, d.summary, d.category,
+                    d.id, d.title, d.category,
                     d.metadata->>'message_day' as message_day,
                     d.created_at
                 FROM documents d
